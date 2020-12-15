@@ -82,56 +82,9 @@ public class Main {
         String debug;
         double[] pos;
         try {
-            //TimeUnit.MILLISECONDS.sleep(1000);
+
             robot = new Robot();
-            /*map = ImageIO.read(new File("map.png"));
-            boolean isBlank = true;
-            for (int x = 0; x < map.getWidth(); x++) {
-                for (int y = 0; y < map.getHeight(); y++) {
-                    if (map.getRGB(x, y) != Color.WHITE.getRGB()) {
-                        isBlank = false;
-                    }
-                }
-            }
-            System.out.println(isBlank);
-            debug = getDebug(getGameScreen());
-            if (isBlank) {
-                pos = getPlayerPos(debug);
-                int playerX = (int) Math.floor(pos[0]);
-                int playerZ = (int) Math.floor(pos[2]);
-                if (debug.contains("positive X")) {
-                    mapOffsetX = playerX;
-                    mapOffsetZ = playerZ - (map.getHeight() / 2);
-                } else if (debug.contains("negative X")) {
-                    mapOffsetX = playerX - map.getWidth();
-                    mapOffsetZ = playerZ - (map.getHeight() / 2);
-                } else if (debug.contains("positive Z")) {
-                    mapOffsetX = playerX - (map.getWidth() / 2);
-                    mapOffsetZ = playerZ;
-                } else if (debug.contains("negative Z")) {
-                    mapOffsetX = playerX - (map.getWidth() / 2);
-                    mapOffsetZ = playerZ - map.getHeight();
-                }
-                FileWriter myWriter = new FileWriter("data.txt");
-                myWriter.write("mapOffsetX:" + mapOffsetX + "\n");
-                myWriter.write("mapOffsetZ:" + mapOffsetZ + "\n");
-                myWriter.close();
-                mapColorPos(playerX, playerZ, Color.GREEN);
-            } else {
-                Scanner scanner = new Scanner(new File("data.txt"));
-                while (scanner.hasNextLine()) {
-                    String data = scanner.nextLine();
-                    System.out.println(data);
-                    if (data.contains("mapOffsetX")) {
-                        mapOffsetX = Integer.parseInt(data.substring(data.indexOf(':') + 1));
-                        System.out.println(mapOffsetX);
-                    }
-                    if (data.contains("mapOffsetZ")) {
-                        mapOffsetZ = Integer.parseInt(data.substring(data.indexOf(':') + 1));
-                        System.out.println(Main.mapOffsetZ);
-                    }
-                }
-            }*/
+
             initMap();
 
             debug = getDebug(getGameScreen());
@@ -149,90 +102,12 @@ public class Main {
                 currentTunnelingDirection = 3;
             }
 
-            //writeChat("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,:/=(){}[]-+*~1234567890#'\"!");
-            //centerPosition();
-//            scanUpperHalf();
-////            breakFallingStack();
-//            writeChat("logoff test");
-//            logOff();
-//            pointAt(180, 17);
-//            mineBlock();
-            /*centerPosition();
-            pointAt(180 + yawDiff, 0);
-            robot.keyPress(KeyEvent.VK_W);
-            TimeUnit.MILLISECONDS.sleep(600);
-            robot.keyRelease(KeyEvent.VK_W);*/
-            /*
-            String s;
-            while (true) {
-                pointAt(180 + yawDiff, 17);
-                debug = getDebug(getGameScreen());
-                pos = getPlayerPosFloored(debug);
 
-                if (debug.contains("positive X") || debug.contains("negative X")) {
-                    if (pos[0] % 8 == 0) placeTorch();
-                } else if (debug.contains("positive Z") || debug.contains("negative Z")) {
-                    if (pos[2] % 8 == 0) placeTorch();
-                }
-                System.out.println("mining" + Arrays.toString(getLookingAtBlockCoords(debug)));
-                mineBlockWithTool();
-                s = scanUpperHalf();
-                System.out.println(s);
-                writeChat(s);
-                pointAt(180 + yawDiff, 45);
-                System.out.println("mining" + Arrays.toString(getLookingAtBlockCoordsFromRobot()));
-                mineBlockWithTool();
-                s = scanLowerHalf();
-                System.out.println(s);
-                writeChat(s);
-                robot.keyPress(KeyEvent.VK_W);
-                TimeUnit.MILLISECONDS.sleep(600);
-                robot.keyRelease(KeyEvent.VK_W);
-
-            }*/
-            /*int[] amounts = getSlotAmounts();
-            String[] names = getSlotContent();
-            String out = "";
-            for (int i = 0; i < names.length; i++) {
-                if (!names[i].equals("empty")) {
-                    out += amounts[i] + "x " + names[i].replaceAll("\\s+", " ") + "    ";
-                }
-            }
-            System.out.println(out);
-            writeChat(out);*/
-
-
-
-            /*currentTunnelingDirection = 0;
-            String out = mineVeinTunnelLevel();
-            System.out.println(out);*/
-            /*
-
-            moveToBlock(40, 48, 20000);
-            for (int i = 1; i < 9; i++) {
-                moveToBlockRough(40+i, 48, 20000);
-
-            }
-            moveToBlock(40+9, 48, 20000);*/
-//            boolean out = moveToBlock(40, 48, 20000);
-
-
-/*
             debug = getDebug(getGameScreen());
-            faceDirection(getDirection(debug));
-            centerPosition();
-            robot.keyPress(KeyEvent.VK_W);
-            TimeUnit.MILLISECONDS.sleep(100);
-            robot.keyRelease(KeyEvent.VK_W);
-            faceDirection(getDirection(debug));
-            BlockPosWithDirection block3up = new BlockPosWithDirection(debug).forward(2).up(4);
-            pointAtPosSneaking(block3up.backward(0.58).down(0.42).left(0.5));
+            blockFluidBreakin(new BlockPosWithDirection(debug).forward());
 
-            block3up = block3up.down();
-            //robot.keyRelease(KeyEvent.VK_SHIFT);
-            pointAtPos(block3up.backward(0.50).down(0.42));*/
-            fillSandRoofHole();
-//            writeChat("moved to 40, 48:" + out);
+
+
             if (false) throw new DebugTextIncompleteException("whatever"); // this is here to keep the catch even if i'm not using anything that generates this exception
 
         } catch (DebugTextIncompleteException e) {
@@ -977,40 +852,7 @@ public class Main {
 
             if (System.currentTimeMillis() > end) break;
         }
-        /*while (Math.abs(diffX) > 0.2 || Math.abs(diffZ) > 0.2) {
 
-            if (diffX < -0.2) {
-                robot.keyPress(keyXPlus);
-                keyXPlusPressed = true;
-            } else if (keyXPlusPressed) {
-                robot.keyRelease(keyXPlus);
-            }
-            if (diffX > 0.2) {
-                robot.keyPress(keyXMinus);
-                keyXMinusPressed = true;
-            } else if (keyXMinusPressed) {
-                robot.keyRelease(keyXMinus);
-            }
-            if (diffZ < -0.2) {
-                robot.keyPress(keyZPlus);
-                keyZPlusPressed = true;
-            } else if (keyZPlusPressed) {
-                robot.keyRelease(keyZPlus);
-            }
-            if (diffZ > 0.2) {
-                robot.keyPress(keyZMinus);
-                keyZMinusPressed = true;
-            } else if (keyZMinusPressed) {
-                robot.keyRelease(keyZMinus);
-            }
-
-            debug = getDebug(getGameScreen());
-            playerPos = getPlayerPos(debug);
-            diffX = playerPos[0] - x;
-            diffZ = playerPos[2] - z;
-
-            if (System.currentTimeMillis() > end) break;
-        }*/
         if (keyXPlusPressed) {
             robot.keyRelease(keyXPlus);
         }
@@ -1561,29 +1403,8 @@ public class Main {
             }
         }
         String resultString = FontTranslator.translateVariableSpacing(result).trim();
-        /*
-        result = new BufferedImage(textboxWidth / fontPixelSize, (textboxHeight / fontPixelSize) + 9, BufferedImage.TYPE_INT_RGB);
 
-        for (int x = 0; x < result.getWidth(); x++) {
-            for (int y = result.getHeight() - 9; y < result.getHeight(); y++) {
-                result.setRGB(x, y, Color.WHITE.getRGB());
-            }
-        }
 
-        for (int x = textboxX; x < textboxX + textboxWidth; x++) {
-            for (int y = textboxY; y < textboxY + textboxHeight; y++) {
-                if ((x - 2) % fontPixelSize == 0 && (y - 1) % fontPixelSize == 0) {
-                    color = new Color(img.getRGB(x, y));
-                    if (color.getRed() == 84 && color.getGreen() == 84 && color.getBlue() == 84){
-                        result.setRGB((x - 2 - textboxX) / fontPixelSize, (y - 1 - textboxY) / fontPixelSize, Color.BLACK.getRGB());
-                    } else {
-                        result.setRGB((x - 2 - textboxX) / fontPixelSize, (y - 1 - textboxY) / fontPixelSize, Color.WHITE.getRGB());
-
-                    }
-                }
-            }
-        }
-        resultString += " " + FontTranslator.translate(result).trim();*/
         return resultString;
     }
     static String getDebug(BufferedImage img) {
@@ -1804,56 +1625,6 @@ public class Main {
             e.printStackTrace();
         }
         return new double[]{yaw, pitch};
-    }
-    static void pointAtOld(double targetYaw, double targetPitch) throws InterruptedException {
-        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
-        int mouseX = mouseLocation.x;
-        int mouseY = mouseLocation.y;
-        while (true) {
-            double[] facing = getFacingFromRobot();
-            double yawDiff = targetYaw - facing[0];
-            double pitchDiff = targetPitch - facing[1];
-            if (yawDiff < -180) {
-                yawDiff +=360;
-            }
-            if (yawDiff > 180) {
-                yawDiff -=360;
-            }
-            if (yawDiff > 10) {
-                robot.mouseMove(mouseX + 50, mouseY);
-            } else if (yawDiff < -10) {
-                robot.mouseMove(mouseX - 50, mouseY);
-            } else if (yawDiff > 1) {
-                robot.mouseMove(mouseX + 10, mouseY);
-            } else if (yawDiff < -1) {
-                robot.mouseMove(mouseX - 10, mouseY);
-            } else if (yawDiff > 0) {
-                robot.mouseMove(mouseX + 1, mouseY);
-            } else if (yawDiff < -0) {
-                robot.mouseMove(mouseX - 1, mouseY);
-            } else if (pitchDiff > 10) {
-                robot.mouseMove(mouseX, mouseY + 50);
-            } else if (pitchDiff < -10) {
-                robot.mouseMove(mouseX, mouseY - 50);
-            } else if (pitchDiff > 1) {
-                robot.mouseMove(mouseX, mouseY + 10);
-            } else if (pitchDiff < -1) {
-                robot.mouseMove(mouseX, mouseY - 10);
-            } else if (pitchDiff > 0) {
-                robot.mouseMove(mouseX, mouseY + 1);
-            } else if (pitchDiff < -0) {
-                robot.mouseMove(mouseX, mouseY - 1);
-            } else {
-//                System.out.println(yawDiff);
-//                System.out.println(pitchDiff);
-                break;
-            }
-            try {
-                TimeUnit.MILLISECONDS.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
     static void pointAt(double targetYaw, double targetPitch) throws InterruptedException {
         Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
