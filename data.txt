@@ -1,0 +1,2 @@
+mapOffsetX:38
+mapOffsetZ:42
