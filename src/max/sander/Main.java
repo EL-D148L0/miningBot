@@ -586,7 +586,7 @@ public class Main {
 
 
 
-        double[] lookingAtBlockPos = getLookingAtBlockCoords(debug);
+        double[] lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
         if (block3up.equalsDoubleArray(lookingAtBlockPos)) {
             placeBlock();
             TimeUnit.MILLISECONDS.sleep(20);
@@ -597,6 +597,7 @@ public class Main {
             return true;
         } else {
             pointAtPosSneaking(block3up.backward(0.58).down(0.42).left(0.5));
+            lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
             if (block3up.left().equalsDoubleArray(lookingAtBlockPos)) {
                 placeBlock();
                 TimeUnit.MILLISECONDS.sleep(20);
@@ -607,6 +608,7 @@ public class Main {
                 return true;
             } else {
                 pointAtPosSneaking(block3up.backward(0.58).down(0.42).right(0.5));
+                lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
                 if (block3up.right().equalsDoubleArray(lookingAtBlockPos)) {
                     placeBlock();
                     TimeUnit.MILLISECONDS.sleep(20);
@@ -619,6 +621,7 @@ public class Main {
                     block3up = block3up.down();
                     robot.keyRelease(KeyEvent.VK_SHIFT);
                     pointAtPos(block3up.backward(0.5).down(0.42));
+                    lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
                     if (block3up.equalsDoubleArray(lookingAtBlockPos)) {
                         placeBlock();
                         TimeUnit.MILLISECONDS.sleep(20);
@@ -626,6 +629,7 @@ public class Main {
                         return true;
                     } else {
                         pointAtPos(block3up.backward(0.58).down(0.42).right(0.5));
+                        lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
                         if (block3up.right().equalsDoubleArray(lookingAtBlockPos)) {
                             placeBlock();
                             TimeUnit.MILLISECONDS.sleep(20);
@@ -633,6 +637,7 @@ public class Main {
                             return true;
                         } else {
                             pointAtPos(block3up.backward(0.58).down(0.42).left(0.5));
+                            lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
                             if (block3up.left().equalsDoubleArray(lookingAtBlockPos)) {
                                 placeBlock();
                                 TimeUnit.MILLISECONDS.sleep(20);
@@ -641,16 +646,19 @@ public class Main {
                             } else {
                                 block3up = block3up.down();
                                 pointAtPos(block3up.backward(0.5).down(0.42));
+                                lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
                                 if (block3up.equalsDoubleArray(lookingAtBlockPos)) {
                                     placeBlock();
                                     return true;
                                 } else {
                                     pointAtPos(block3up.backward(0.58).down(0.42).right(0.5));
+                                    lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
                                     if (block3up.right().equalsDoubleArray(lookingAtBlockPos)) {
                                         placeBlock();
                                         return true;
                                     } else {
                                         pointAtPos(block3up.backward(0.58).down(0.42).left(0.5));
+                                        lookingAtBlockPos = getLookingAtBlockCoords(getDebug(getGameScreen()));
                                         if (block3up.left().equalsDoubleArray(lookingAtBlockPos)) {
                                             placeBlock();
                                             return true;
