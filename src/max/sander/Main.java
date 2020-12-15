@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,7 @@ public class Main {
     static BufferedImage map;
     static int mapOffsetX = 0;
     static int mapOffsetZ = 0;
-    static int yawDiff; // values are made for facing toward negative Z     yawdiff is added to yaw values
+    static int yawDiff; // values are made for facing toward negative Z     yawDiff is added to yaw values
     static int currentTunnelingDirection = 0; //  0: positive X 1: negative X 2: positive Z 3: negative Z
     static boolean debuggingMode = true;
 
@@ -36,9 +37,12 @@ public class Main {
     static int red = -65536;
     static int orange = -14336;
     static int black = -16777216;
+    static int magenta = -65281;
     static int white = -1;
     static int blue = -16776961;
     static int cyan = -16711681;
+    static int pink = -20561;
+    static int yellow = -256;
 
 
     static int rgb221 = -2236963;
@@ -104,7 +108,8 @@ public class Main {
 
 
             debug = getDebug(getGameScreen());
-            blockFluidBreakin(new BlockPosWithDirection(debug).forward());
+
+            mineVeinTunnelLevel();
 
 
 
@@ -127,258 +132,71 @@ public class Main {
             endProgram();
         }
     }
-    static String mineVeinTunnelLevel() throws InterruptedException {
+    static String mineVeinTunnelLevel() throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException, UnexpectedGameBehaviourException {
         /* call this facing the wall that contains ore
         * this should mine all the ore of the vein that is on the same level as the tunnel and return to the location where it was called returning "done".
-        * if it runs into an unexpected situation (cave or liquid etc) it will return to the location it was called, block off the dug out space and return "unexpected".
+        * if it runs into an unexpected situation (cave or liquid etc) it will depending on the gravity of the situation return to the location it was
+        * called, block off the dug out space and return "unexpected".
+        * returns:
+        * done: done
+        * unexpected: vein has been abandoned and blocked off
         * */
 
         String debug = getDebug(getGameScreen());
         BlockPosWithDirection playerPos = new BlockPosWithDirection(debug);
 
         VeinMinerTreeElement root = new VeinMinerTreeElement(playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        VeinMinerTreeElement currentLocation = root;
         VeinMinerTreeElement currentElement = new VeinMinerTreeElement(playerPos.forward().getX(), playerPos.forward().getY(), playerPos.forward().getZ(), root);
+        BlockPosList seenBlocks = new BlockPosList();
 
         while (!VeinMinerTreeElement.isCleared()) {
-
-        }
-
-
-
-        /*TODO
-            - make first thing part of loop after making root element on starting position and first ore element in front of it
-
-
-
-        * */
-
-        //TODO fleeing mechanics must contain map recolouring of cutoof tunnel part
-
-
-
-
-
-        BlockPosWithDirection minedBlockPos = new BlockPosWithDirection(debug).up().forward();
-        pointAtPos(minedBlockPos.backward(0.5));
-        mineBlockWithTool();
-
-
-
-        //repeated for the first time cause that's where it starts so things are different
-        boolean oreLeft = false;
-        boolean oreRight = false;
-        boolean oreForward = false;
-        // forward block
-
-        pointAtPos(minedBlockPos.forward(0.5));
-
-        TimeUnit.MILLISECONDS.sleep(100);
-
-        debug = getDebug(getGameScreen());
-        String block = getLookingAtBlock(debug);
-        double[] blockPos = getLookingAtBlockCoords(debug);
-        if (debug.contains("Targeted Entity")) {
-            retreatAndBlock(currentTunnelingDirection);
-            return "unexpected";
-        }
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) {
-            placeBlock(minedBlockPos.down(0.5));
-            return "unexpected";
-        }
-        boolean fallingsand = false;
-        if (!minedBlockPos.forward().equalsDoubleArray(blockPos)) {
-            if (minedBlockPos.equalsDoubleArray(blockPos)) {
-                fallingsand = true;
-                pointAtPos(minedBlockPos.down(0.5));
-                breakFallingStack();
-                TimeUnit.SECONDS.sleep(5);
-                leftClick();
-                pointAtPos(minedBlockPos.forward(0.5));
-                debug = getDebug(getGameScreen());
-                block = getLookingAtBlock(debug);
-                blockPos = getLookingAtBlockCoords(debug);
-                if (debug.contains("Targeted Entity")) {
-                    retreatAndBlock(currentTunnelingDirection);
+            if (currentElement.getType().equals("ore")) {
+                String result = mineVeinMinerTreeElement(currentElement, seenBlocks, true);
+                if (result.equals("flee")) {
+                    writeChatDebug("flight triggered. run away!");
+                    //TODO put flee function here once it exists
                     return "unexpected";
+                } else if (result.equals("aborted")) {
+                    currentElement.removeUnminedDuplicates();
+                } else if (result.equals("done")) {
+                    currentElement.removeUnminedDuplicates();
+                } else {
+                    throw new HowDidThisHappenException("how? if this comes up during testing something must have gone extremely wrong");
                 }
-                if (!getLookingAtFluid(debug).equals("minecraft:empty")) {
-                    placeBlock(minedBlockPos.down(0.5));
-                    return "unexpected";
+            } else {
+                currentElement = currentElement.getNextOre();
+                if (currentElement == null) {
+                    throw new HowDidThisHappenException("unless isCleared doesn't work this should never happen");
                 }
-            }
-            if (!minedBlockPos.forward().equalsDoubleArray(blockPos)) {
-                writeChat("air");
-                if (mapGetColor(minedBlockPos.forward().toDoubleArray()) != black) {
-                    mapColorPos(minedBlockPos.forward().toDoubleArray(), Color.RED);
-                    placeBlock(minedBlockPos.down(0.5));
-                    return "unexpected";
-                }
+                ArrayList<double[]> path = currentLocation.getPath(currentElement.getParent());
+                if (followFlatPath(path)) {
+                    currentLocation = currentElement.getParent();
+                } else throw new UnexpectedGameBehaviourException("movement was apparently blocked on a known route");
             }
         }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-            case "minecraft:emerald_ore": case "minecraft:gold_ore": case "minecraft:iron_ore": case "minecraft:coal_ore":
-            case "minecraft:diamond_ore": case "minecraft:redstone_ore": case "minecraft:lapis_ore":
-                mapColorPos(blockPos, Color.CYAN);
-                oreForward = true;
-                break;
-            case "minecraft:cobblestone": case "minecraft:stone": case "minecraft:diorite": case "minecraft:granite":
-            case "minecraft:andesite": case "minecraft:dirt": case "minecraft:sand": case "minecraft:gravel":
-                mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-        }
-        //forward block done
 
-        // left block
-
-        pointAtPos(minedBlockPos.left(0.5));
-
-        debug = getDebug(getGameScreen());
-        block = getLookingAtBlock(debug);
-        blockPos = getLookingAtBlockCoords(debug);
-        if (debug.contains("Targeted Entity")) {
-            retreatAndBlock(currentTunnelingDirection);
-            return "unexpected";
-        }
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) {
-            placeBlock(minedBlockPos.down(0.5));
-            return "unexpected";
-        }
-        if (!minedBlockPos.left().equalsDoubleArray(blockPos)) {
-            writeChat("air");
-            if (mapGetColor(minedBlockPos.forward().toDoubleArray()) != black) {
-                mapColorPos(minedBlockPos.forward().toDoubleArray(), Color.RED);
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-            }
-        }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-            case "minecraft:emerald_ore": case "minecraft:gold_ore": case "minecraft:iron_ore": case "minecraft:coal_ore":
-            case "minecraft:diamond_ore": case "minecraft:redstone_ore": case "minecraft:lapis_ore":
-                mapColorPos(blockPos, Color.CYAN);
-                oreLeft = true;
-                break;
-            case "minecraft:cobblestone": case "minecraft:stone": case "minecraft:diorite": case "minecraft:granite":
-            case "minecraft:andesite": case "minecraft:dirt": case "minecraft:sand": case "minecraft:gravel":
-                mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-        }
-        //left block done
-        // right block
-
-        pointAtPos(minedBlockPos.right(0.5));
-
-        debug = getDebug(getGameScreen());
-        block = getLookingAtBlock(debug);
-        blockPos = getLookingAtBlockCoords(debug);
-        if (debug.contains("Targeted Entity")) {
-            retreatAndBlock(currentTunnelingDirection);
-            return "unexpected";
-        }
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) {
-            placeBlock(minedBlockPos.down(0.5));
-            return "unexpected";
-        }
-        if (!minedBlockPos.right().equalsDoubleArray(blockPos)) {
-            writeChat("air");
-            if (mapGetColor(minedBlockPos.forward().toDoubleArray()) != black) {
-                mapColorPos(minedBlockPos.forward().toDoubleArray(), Color.RED);
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-            }
-        }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-            case "minecraft:emerald_ore": case "minecraft:gold_ore": case "minecraft:iron_ore": case "minecraft:coal_ore":
-            case "minecraft:diamond_ore": case "minecraft:redstone_ore": case "minecraft:lapis_ore":
-                mapColorPos(blockPos, Color.CYAN);
-                oreRight = true;
-                break;
-            case "minecraft:cobblestone": case "minecraft:stone": case "minecraft:diorite": case "minecraft:granite":
-            case "minecraft:andesite": case "minecraft:dirt": case "minecraft:sand": case "minecraft:gravel":
-                mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-        }
-        //right block done
-        // top block
-
-        if (!fallingsand) {
-            pointAtPos(minedBlockPos.up(0.5));
-
-            debug = getDebug(getGameScreen());
-            block = getLookingAtBlock(debug);
-            blockPos = getLookingAtBlockCoords(debug);
-            if (debug.contains("Targeted Entity")) {
-                retreatAndBlock(currentTunnelingDirection);
-                return "unexpected";
-            }
-            if (!getLookingAtFluid(debug).equals("minecraft:empty")) {
-                placeBlock(minedBlockPos.down(0.5));
-                return "unexpected";
-            }
-            if (!minedBlockPos.up().equalsDoubleArray(blockPos)) {
-                writeChat("air");
-                if (mapGetColor(minedBlockPos.forward().toDoubleArray()) != black) {
-                    mapColorPos(minedBlockPos.forward().toDoubleArray(), Color.RED);
-                    placeBlock(minedBlockPos.down(0.5));
-                    return "unexpected";
-                }
-            }
-            switch (block) {
-                case "minecraft:infested_stone":
-                    mapColorPos(blockPos, Color.ORANGE);
-                    placeBlock(minedBlockPos.down(0.5));
-                    return "unexpected";
-                case "minecraft:emerald_ore": case "minecraft:gold_ore": case "minecraft:iron_ore": case "minecraft:coal_ore":
-                case "minecraft:diamond_ore": case "minecraft:redstone_ore": case "minecraft:lapis_ore":
-                    mapColorPos(blockPos, Color.MAGENTA);
-                    break;
-                case "minecraft:cobblestone": case "minecraft:stone": case "minecraft:diorite": case "minecraft:granite":
-                case "minecraft:andesite": case "minecraft:dirt": case "minecraft:sand": case "minecraft:gravel":
-                    break;
-                default:
-                    mapColorPos(blockPos, Color.BLUE);
-                    writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                    System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                    placeBlock(minedBlockPos.down(0.5));
-                    return "unexpected";
-            }
-        }
-        //top block done
+        ArrayList<double[]> path = currentLocation.getPath(root);
+        if (followFlatPath(path)) {
+            return "done";
+        } else throw new UnexpectedGameBehaviourException("movement was apparently blocked on a known route");
 
 
+        //TODO fleeing mechanics must contain map recolouring of cutoff tunnel part
 
-
-        return "done";
     }
+
+    static boolean followFlatPath(ArrayList<double[]> path) throws InterruptedException {
+        int steps = path.size();
+        if (steps == 0) return true;
+        for (int i = 0; i < steps - 1; i++) {
+            if (!moveToBlockRough(path.get(i)[0], path.get(i)[2], 4000)) return false;
+        }
+        if (!moveToBlockRough(path.get(steps - 1)[0], path.get(steps - 1)[2], 4000)) return false;
+        //fixme this one isn't working all that great
+        return true;
+    }
+
     static String mineVeinMinerTreeElement(VeinMinerTreeElement currentElement, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException {
         /*mines the given VeinMinerTreeElement. does not flee or move on. generates subelements. changes element to "mined" or "blocked". does not remove duplicates.
         * is called from a position where the VeinMinerTreeElement is in view
@@ -388,11 +206,15 @@ public class Main {
         * flee: bigger problem like monster. this vein should be abandoned and blocked off.
         * */
 
+        //TODO nearly none of this is tested yet
+
 
 
 
         String debug = getDebug(getGameScreen());
         BlockPosWithDirection playerPos = new BlockPosWithDirection(debug);
+        pointAtPos(new BlockPosWithDirection(currentElement.getX(), currentElement.getY(), currentElement.getZ(), getDirection(debug)).up());
+        debug = getDebug(getGameScreen());//necessary to make directions right
 
         BlockPosWithDirection minedBlockPos = new BlockPosWithDirection(currentElement.getX(), currentElement.getY(), currentElement.getZ(), getDirection(debug)).up();
         pointAtPos(minedBlockPos.backward(0.5));
@@ -411,17 +233,27 @@ public class Main {
         // upper forward block
         examinedBlockPos = minedBlockPos.forward();
         String x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreForward, fallingsand);
-        if (x != null) return x;
+        if (x != null) {
+            currentElement.setType("blocked");
+            return x;
+        }
+
         
         // upper left block
         examinedBlockPos = minedBlockPos.left();
         x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreLeft, fallingsand);
-        if (x != null) return x;
+        if (x != null) {
+            currentElement.setType("blocked");
+            return x;
+        }
         
         // upper right block
         examinedBlockPos = minedBlockPos.right();
-        x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreLeft, fallingsand);
-        if (x != null) return x;
+            x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreRight, fallingsand);
+        if (x != null) {
+            currentElement.setType("blocked");
+            return x;
+        }
 
         // top block
 
@@ -429,22 +261,66 @@ public class Main {
             fillSandRoofHole();
         } else {
             examinedBlockPos = minedBlockPos.up();
-            x = reactToScanTop(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel);
-            if (x != null) return x;
-
+            x = reactToScanRoof(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel);
+            if (x != null) {
+                currentElement.setType("blocked");
+                return x;
+            }
         }
 
 
+        minedBlockPos = minedBlockPos.down();
+        pointAtPos(minedBlockPos.up(0.5));
+        mineBlockWithTool();
+        seenBlocks.removeBlockPos(minedBlockPos);
+        TimeUnit.MILLISECONDS.sleep(100);
+        
+        // lower forward block
+        examinedBlockPos = minedBlockPos.forward();
+        x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreForward, fallingsand);
+        if (x != null) {
+            currentElement.setType("blocked");
+            return x;
+        }
 
-        if (fallingsand.get()) System.out.println("adsasd");
-        if (oreForward.get()) System.out.println("adsasd");
-        if (oreLeft.get()) System.out.println("adsasd");
-        if (oreRight.get()) System.out.println("adsasd");
+        // lower left block
+        examinedBlockPos = minedBlockPos.left();
+        x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreLeft, fallingsand);
+        if (x != null) {
+            currentElement.setType("blocked");
+            return x;
+        }
+
+        // lower right block
+        examinedBlockPos = minedBlockPos.right();
+        x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreRight, fallingsand);
+        if (x != null) {
+            currentElement.setType("blocked");
+            return x;
+        }
+
+        // bottom block
+        examinedBlockPos = minedBlockPos.down();
+        x = reactToScanFloor(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel);
+        if (x != null) {
+            currentElement.setType("blocked");
+            return x;
+        }
 
 
+        if (oreRight.get()) {
+            new VeinMinerTreeElement(minedBlockPos.right(), currentElement).checkBlockedDuplicates();
+        }
+        if (oreForward.get()) {
+            new VeinMinerTreeElement(minedBlockPos.forward(), currentElement).checkBlockedDuplicates();
+        }
+        if (oreLeft.get()) {
+            new VeinMinerTreeElement(minedBlockPos.left(), currentElement).checkBlockedDuplicates();
+        }
 
 
-
+        currentElement.setType("mined");
+        if (levelWithTunnel && mapGetColor(minedBlockPos.toDoubleArray()) != magenta && mapGetColor(minedBlockPos.toDoubleArray()) != yellow && mapGetColor(minedBlockPos.toDoubleArray()) != pink) mapColorPos(minedBlockPos.toDoubleArray(), Color.BLACK);
         return "done";
     }
     static boolean fillSandRoofHole() throws InterruptedException, DebugTextIncompleteException {
@@ -458,7 +334,7 @@ public class Main {
         BlockPosWithDirection block3up = new BlockPosWithDirection(debug).forward(2).up(4);
         pointAtPosSneaking(block3up.backward(0.5).down(0.3));
         robot.keyPress(KeyEvent.VK_SHIFT);
-        TimeUnit.MILLISECONDS.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(150);
 
 
 
@@ -481,6 +357,10 @@ public class Main {
         } else if (block3up.backward().down().equalsDoubleArray(lookingAtBlockPos)) {
             placeBlock();
             robot.keyRelease(KeyEvent.VK_SHIFT);
+            return true;
+        } else if (block3up.backward().down().down().equalsDoubleArray(lookingAtBlockPos)) {
+            robot.keyRelease(KeyEvent.VK_SHIFT);
+            writeChatDebug("no sandhole to block");
             return true;
         } else {
             pointAtPosSneaking(block3up.backward(0.58).down(0.42).left(0.5));
@@ -600,7 +480,7 @@ public class Main {
         }
         return null;
     }
-    private static String reactToScanTop(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException {
+    private static String reactToScanRoof(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException {
         String result;
         String debug;
         result = scanBlock(examinedBlockPos, minedBlockPos, seenBlocks);
@@ -620,6 +500,33 @@ public class Main {
         }
         return null;
     }
+    private static String reactToScanFloor(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException {
+        String result;
+        String debug;
+        result = scanBlock(examinedBlockPos, minedBlockPos, seenBlocks);
+        if (result.contains("blocked")) return "aborted";
+        if (result.contains("flee")) return "flee";
+        if (result.contains("ore")) {
+            if (levelWithTunnel) {
+                if (mapGetColor(examinedBlockPos.toDoubleArray()) == magenta) {
+                    mapColorPos(examinedBlockPos.toDoubleArray(), Color.YELLOW);
+                } else {
+                    mapColorPos(examinedBlockPos.toDoubleArray(), Color.PINK);
+                }
+            }
+        }
+        //tunnel -> do nothing
+        //FIXME return here when i figured out roof ore mining logic to maybe add floorbuilding in case of tunnel
+        if (result.contains("other")) {
+            if (levelWithTunnel) mapColorPos(examinedBlockPos.toDoubleArray(), Color.BLUE);
+        }
+        if (result.contains("air")) {
+            if (blockFluidBreakin(minedBlockPos)) return "aborted";
+            return "flee";
+        }
+        return null;
+    }
+
 
     static String scanBlock(BlockPosWithDirection examinedBlockPos, BlockPosWithDirection minedBlockPos, BlockPosList seenBlocks) throws InterruptedException, DebugTextIncompleteException {
         /*will look at given block
@@ -755,7 +662,10 @@ public class Main {
         return answer;
     }
     static void writeChatDebug(String in) throws InterruptedException {
-        if (debuggingMode) writeChat(in);
+        if (debuggingMode) {
+            System.out.println(in);
+            writeChat(in);
+        }
     }
     static  boolean moveToBlock(double x, double z) throws InterruptedException {
         return moveToBlock(x, z, 3500);
@@ -2995,7 +2905,7 @@ public class Main {
         if (!Arrays.equals(targetedBlockPos, blockPos)) {
             //writeChat(Arrays.toString(playerPos) + Arrays.toString(minedBlockPos) + Arrays.toString(blockPos));
             if (Arrays.equals(minedBlockPos, blockPos)) {
-                writeChat("somethig unexpected happened");
+                writeChat("something unexpected happened");
                 return "unexpected";
             }
             if (!Arrays.equals(targetedBlockPos, blockPos)) {

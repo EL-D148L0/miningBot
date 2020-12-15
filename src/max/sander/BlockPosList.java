@@ -17,11 +17,7 @@ public class BlockPosList {
         this.removeBlockPos(blockPos.toDoubleArray());
     }
     public void removeBlockPos(double[] blockPos) {
-        for (double[] block: blocks) {
-            if (Arrays.equals(block, blockPos)) {
-                blocks.remove(block);
-            }
-        }
+        blocks.removeIf(block -> Arrays.equals(block, blockPos));
     }
     public boolean contains(double[] blockPos) {
         boolean isThere = false;
