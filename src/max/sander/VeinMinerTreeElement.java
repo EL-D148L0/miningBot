@@ -100,7 +100,7 @@ public class VeinMinerTreeElement {
     }
 
     public ArrayList<double[]> getPath(VeinMinerTreeElement destination) throws HowDidThisHappenException {
-        //fixme untested but i'm assuming it works
+        //untested but i'm assuming it works --> seems like it does work
         ArrayList<double[]> steps = new ArrayList<double[]>();
         if (this == destination) {
             return steps;

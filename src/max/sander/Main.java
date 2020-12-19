@@ -78,7 +78,7 @@ public class Main {
      - vein mining functions
      - redo the scan functions using the new pointAtPos function
      - fix movement functions
-     - idea: make a faster pointat function that calculates if it should be able to see the target at the current heading so it doesn't spend much time swiveling
+     - idea: make a faster pointat function that calculates if it should be able to see the target at the current heading so it doesn't spend much time swiveling  --> done i guess
 
     */
 
@@ -111,9 +111,10 @@ public class Main {
 
             debug = getDebug(getGameScreen());
 
-            //mineVeinTunnelLevel();
-            BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward(3).right();
-            pointAtSide(bp1.down(0.5));
+            mineVeinTunnelLevel();
+            /*BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward();
+            moveToBlockRough(bp1.getX(), bp1.getZ(), 2000);*/
+            /*pointAtSide(bp1.down(0.5));
             TimeUnit.MILLISECONDS.sleep(800);
             pointAtSide(bp1.forward(0.5));
             TimeUnit.MILLISECONDS.sleep(800);
@@ -130,7 +131,7 @@ public class Main {
             TimeUnit.MILLISECONDS.sleep(800);
             pointAtPos(bp1.right(0.5));
             TimeUnit.MILLISECONDS.sleep(800);
-            pointAtPos(bp1.forward(0.5).up());
+            pointAtPos(bp1.forward(0.5).up());*/
 
 
 
@@ -218,7 +219,7 @@ public class Main {
         return true;
     }
 
-    static String mineVeinMinerTreeElement(VeinMinerTreeElement currentElement, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException {
+    static String mineVeinMinerTreeElement(VeinMinerTreeElement currentElement, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
         /*mines the given VeinMinerTreeElement. does not flee or move on. generates subelements. changes element to "mined" or "blocked". does not remove duplicates.
         * is called from a position where the VeinMinerTreeElement is in view
         * returns:
@@ -234,11 +235,26 @@ public class Main {
 
         String debug = getDebug(getGameScreen());
         BlockPosWithDirection playerPos = new BlockPosWithDirection(debug);
-        pointAtPos(new BlockPosWithDirection(currentElement.getX(), currentElement.getY(), currentElement.getZ(), getDirection(debug)).up());
-        debug = getDebug(getGameScreen());//necessary to make directions right
+        //debug = getDebug(getGameScreen());//necessary to make directions right fixme calculate this instead of wasting time done (not tested)
+        int minedBlockPosDir;
+        double xDiff = currentElement.getX() - playerPos.getX();
+        double zDiff = currentElement.getZ() - playerPos.getZ();
+        if (xDiff > zDiff) {
+            if (xDiff > 0) {
+                minedBlockPosDir = 0;
+            } else {
+                minedBlockPosDir = 1;
+            }
+        } else {
+            if (zDiff > 0) {
+                minedBlockPosDir = 2;
+            } else {
+                minedBlockPosDir = 3;
+            }
+        }
 
-        BlockPosWithDirection minedBlockPos = new BlockPosWithDirection(currentElement.getX(), currentElement.getY(), currentElement.getZ(), getDirection(debug)).up();
-        pointAtPos(minedBlockPos.backward(0.5));
+        BlockPosWithDirection minedBlockPos = new BlockPosWithDirection(currentElement.getX(), currentElement.getY(), currentElement.getZ(), minedBlockPosDir).up();
+        pointAtSide(minedBlockPos.backward(0.5));
         mineBlockWithTool();
         seenBlocks.removeBlockPos(minedBlockPos);
         TimeUnit.MILLISECONDS.sleep(100);
@@ -291,7 +307,7 @@ public class Main {
 
 
         minedBlockPos = minedBlockPos.down();
-        pointAtPos(minedBlockPos.up(0.5));
+        pointAtSide(minedBlockPos.up(0.5));
         mineBlockWithTool();
         seenBlocks.removeBlockPos(minedBlockPos);
         TimeUnit.MILLISECONDS.sleep(100);
@@ -463,7 +479,7 @@ public class Main {
         return false;
     }
 
-    private static String reactToScan(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel, BooleanHolder ore, BooleanHolder fallingsand) throws InterruptedException, DebugTextIncompleteException {
+    private static String reactToScan(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel, BooleanHolder ore, BooleanHolder fallingsand) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
         String result;
         String debug;
         result = scanBlock(examinedBlockPos, minedBlockPos, seenBlocks);
@@ -501,7 +517,7 @@ public class Main {
         }
         return null;
     }
-    private static String reactToScanRoof(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException {
+    private static String reactToScanRoof(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
         String result;
         String debug;
         result = scanBlock(examinedBlockPos, minedBlockPos, seenBlocks);
@@ -521,7 +537,7 @@ public class Main {
         }
         return null;
     }
-    private static String reactToScanFloor(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException {
+    private static String reactToScanFloor(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
         String result;
         String debug;
         result = scanBlock(examinedBlockPos, minedBlockPos, seenBlocks);
@@ -549,7 +565,7 @@ public class Main {
     }
 
 
-    static String scanBlock(BlockPosWithDirection examinedBlockPos, BlockPosWithDirection minedBlockPos, BlockPosList seenBlocks) throws InterruptedException, DebugTextIncompleteException {
+    static String scanBlock(BlockPosWithDirection examinedBlockPos, BlockPosWithDirection minedBlockPos, BlockPosList seenBlocks) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
         /*will look at given block
         * will not block off if blockable events happen (water breakin etc.)
         * will remove fallingsand
@@ -567,7 +583,7 @@ public class Main {
         * other: a block that is not on one of the lists
         */
         BlockPosWithDirection examinedBlockPointAtPos = new BlockPosWithDirection((examinedBlockPos.getX() + minedBlockPos.getX())/2, (examinedBlockPos.getY() + minedBlockPos.getY())/2, (examinedBlockPos.getZ() + minedBlockPos.getZ())/2, minedBlockPos.getDirection());
-        pointAtPos(examinedBlockPointAtPos);
+        pointAtSide(examinedBlockPointAtPos);
         boolean fallingsand = false;
 
         TimeUnit.MILLISECONDS.sleep(100);
@@ -587,11 +603,11 @@ public class Main {
         if (!examinedBlockPos.equalsDoubleArray(lookingAtBlockPos)) {
             if (minedBlockPos.equalsDoubleArray(lookingAtBlockPos)) {
                 fallingsand = true;
-                pointAtPos(minedBlockPos.down(0.5));
+                pointAtSide(minedBlockPos.down(0.5));
                 breakFallingStackSlab();
                 TimeUnit.SECONDS.sleep(2);
                 mineBlockWithTool();
-                pointAtPos(examinedBlockPointAtPos);
+                pointAtSide(examinedBlockPointAtPos);
                 debug = getDebug(getGameScreen());
                 block = getLookingAtBlock(debug);
                 lookingAtBlockPos = getLookingAtBlockCoordsNotNull(debug);
@@ -635,29 +651,29 @@ public class Main {
             return "other";
         }
     }
-    static boolean blockFluidBreakin(BlockPosWithDirection blockPos) throws InterruptedException, DebugTextIncompleteException {
-        pointAtPos(blockPos.down(0.5));
+    static boolean blockFluidBreakin(BlockPosWithDirection blockPos) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
+        pointAtSide(blockPos.down(0.5));
         String debug = getDebug(getGameScreen());
         double[] lookingAtBlockPos = getLookingAtBlockCoordsNotNull(debug);
         if (blockPos.down().equalsDoubleArray(lookingAtBlockPos)) {
             placeBlock();
             return true;
         } else {
-            pointAtPos(blockPos.left(0.5));
+            pointAtSide(blockPos.left(0.5));
             debug = getDebug(getGameScreen());
             lookingAtBlockPos = getLookingAtBlockCoordsNotNull(debug);
             if (blockPos.left().equalsDoubleArray(lookingAtBlockPos)) {
                 placeBlock();
                 return true;
             } else {
-                pointAtPos(blockPos.right(0.5));
+                pointAtSide(blockPos.right(0.5));
                 debug = getDebug(getGameScreen());
                 lookingAtBlockPos = getLookingAtBlockCoordsNotNull(debug);
                 if (blockPos.right().equalsDoubleArray(lookingAtBlockPos)) {
                     placeBlock();
                     return true;
                 } else {
-                    pointAtPos(blockPos.forward(0.5));
+                    pointAtSide(blockPos.forward(0.5));
                     debug = getDebug(getGameScreen());
                     lookingAtBlockPos = getLookingAtBlockCoordsNotNull(debug);
                     if (blockPos.forward().equalsDoubleArray(lookingAtBlockPos)) {
@@ -899,7 +915,7 @@ public class Main {
 
         return !(Math.abs(diffX) > 0.2 || Math.abs(diffZ) > 0.2);
     }
-    static void retreatAndBlock(int dir) throws InterruptedException {
+    static void retreatAndBlock(int dir) throws InterruptedException, HowDidThisHappenException {
         // goes back one block in tunneling direction and blocks tunnel in front of it
         String debug = getDebug(getGameScreen());
         faceDirection(dir);
@@ -907,9 +923,9 @@ public class Main {
         robot.keyPress(KeyEvent.VK_S);
         TimeUnit.MILLISECONDS.sleep(600);
         robot.keyRelease(KeyEvent.VK_S);
-        pointAtPos(barrierPos.down(0.5));
+        pointAtSide(barrierPos.down(0.5));
         placeBlock();
-        pointAtPos(barrierPos.up(0.5));
+        pointAtSide(barrierPos.up(0.5));
         placeBlock();
     }
     static void placeBlock() throws InterruptedException {
@@ -1076,7 +1092,7 @@ public class Main {
             Vector3D rayVector = new Vector3D(rayVectorX, rayVectorY, rayVectorZ);
 
             Vector3D intersectVector = Vector3D.intersectPointRay(rayVector, eyePos, planeNormal, planePoint);
-            System.out.println(intersectVector);
+            //System.out.println(intersectVector);
 
             if (intersectVector != null) {
                 double[] intersect = intersectVector.toDoubleArray();
@@ -1098,7 +1114,7 @@ public class Main {
             robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
             //System.out.println("Moved! x:" + Math.round(yawDiff*10) + " y:" + Math.round(pitchDiff*10));
             try {
-                TimeUnit.MILLISECONDS.sleep(50);
+                TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
