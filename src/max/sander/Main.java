@@ -77,6 +77,8 @@ public class Main {
      - add the function that respond to mobs with the procedure described in a comment below.
      - vein mining functions
      - redo the scan functions using the new pointAtPos function
+     - fix movement functions
+     - idea: make a faster pointat function that calculates if it should be able to see the target at the current heading so it doesn't spend much time swiveling
 
     */
 
@@ -109,7 +111,26 @@ public class Main {
 
             debug = getDebug(getGameScreen());
 
-            mineVeinTunnelLevel();
+            //mineVeinTunnelLevel();
+            BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward(3).right();
+            pointAtSide(bp1.down(0.5));
+            TimeUnit.MILLISECONDS.sleep(800);
+            pointAtSide(bp1.forward(0.5));
+            TimeUnit.MILLISECONDS.sleep(800);
+            pointAtSide(bp1.right(0.5));
+            TimeUnit.MILLISECONDS.sleep(800);
+            pointAtSide(bp1.forward(0.5).up());
+            
+            TimeUnit.MILLISECONDS.sleep(2000);
+
+
+            pointAtPos(bp1.down(0.5));
+            TimeUnit.MILLISECONDS.sleep(800);
+            pointAtPos(bp1.forward(0.5));
+            TimeUnit.MILLISECONDS.sleep(800);
+            pointAtPos(bp1.right(0.5));
+            TimeUnit.MILLISECONDS.sleep(800);
+            pointAtPos(bp1.forward(0.5).up());
 
 
 
@@ -308,11 +329,11 @@ public class Main {
         }
 
 
-        if (oreRight.get()) {
-            new VeinMinerTreeElement(minedBlockPos.right(), currentElement).checkBlockedDuplicates();
-        }
         if (oreForward.get()) {
             new VeinMinerTreeElement(minedBlockPos.forward(), currentElement).checkBlockedDuplicates();
+        }
+        if (oreRight.get()) {
+            new VeinMinerTreeElement(minedBlockPos.right(), currentElement).checkBlockedDuplicates();
         }
         if (oreLeft.get()) {
             new VeinMinerTreeElement(minedBlockPos.left(), currentElement).checkBlockedDuplicates();
@@ -972,6 +993,116 @@ public class Main {
         if (distance != 0) targetPitch = Math.toDegrees(Math.asin(yDiff/distance));
 
         pointAt(targetYaw, targetPitch);
+
+    }
+    static void pointAtSide(BlockPosWithDirection targetPos) throws InterruptedException, HowDidThisHappenException {
+        //only works with BlockPosWithDirections that are 0.5 off from full blocks.
+        //will point at the blockside whichs center the BlockPosWithDirection is marking.
+        String debug = getDebug(getGameScreen());
+        double eyeHeight = 1.62;
+        double[] playerPos = getPlayerPos(debug);
+        double xDiff = (playerPos[0] - (targetPos.getX()+ 0.5));
+        double yDiff = ((playerPos[1] + eyeHeight) - (targetPos.getY()+ 0.5));
+        double zDiff = (playerPos[2] - (targetPos.getZ()+ 0.5));
+        double[] facing = getFacing(debug);
+        double targetYaw = facing[0];
+        double targetPitch = facing[1];
+        if (xDiff == 0) {
+            if (zDiff < 0) {
+                targetYaw = 0;
+            } else if (zDiff > 0) {
+                targetYaw = 180;
+            }
+        } else if (xDiff > 0) {
+            targetYaw = Math.toDegrees(Math.atan(zDiff / xDiff)) + 90;
+        } else if (xDiff < 0) {
+            targetYaw = Math.toDegrees(Math.atan(zDiff / xDiff)) - 90;
+        }
+
+        double distance = distance3D(playerPos, targetPos.down(eyeHeight).addX(0.5).addY(0.5).addZ(0.5).toDoubleArray());
+//        writeChat("yDiff=" + yDiff + " distance ="+distance);
+        if (distance != 0) targetPitch = Math.toDegrees(Math.asin(yDiff/distance));
+
+        //
+
+        //pointAt modified version
+
+        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        int mouseX = mouseLocation.x;
+        int mouseY = mouseLocation.y;
+//        double[] facing;
+        double yawDiff;
+        double pitchDiff;
+        targetYaw = round(targetYaw, 1);
+        targetPitch = round(targetPitch, 1);
+
+
+        //setup for break logic
+        boolean facingSide = false;
+        int plane;// 0 same x , 1 same y, 2 same z
+        double[] smallCorner;
+        double[] bigCorner;
+        Vector3D planeNormal;
+        if (Math.abs(Math.floor(targetPos.getX()) - targetPos.getX()) > 0.4 && Math.abs(Math.ceil(targetPos.getX()) - targetPos.getX()) > 0.4) {
+            plane = 0;
+            planeNormal = new Vector3D(1, 0, 0);
+        } else if (Math.abs(Math.floor(targetPos.getY()) - targetPos.getY()) > 0.4 && Math.abs(Math.ceil(targetPos.getY()) - targetPos.getY()) > 0.4){
+            plane = 1;
+            planeNormal = new Vector3D(0, 1, 0);
+        } else if (Math.abs(Math.floor(targetPos.getZ()) - targetPos.getZ()) > 0.4 && Math.abs(Math.ceil(targetPos.getZ()) - targetPos.getZ()) > 0.4) {
+            plane = 2;
+            planeNormal = new Vector3D(0, 0, 1);
+        } else throw new HowDidThisHappenException("a blockposwithdirection that was not on a block border was passed");
+        Vector3D planePoint = new Vector3D(targetPos.toDoubleArray()).plus(new Vector3D(0.5, 0.5, 0.5));
+
+        // a block reaches from its coordinates to its coordinates + 1
+        Vector3D eyePos = new Vector3D(playerPos[0], playerPos[1] + eyeHeight, playerPos[2]);
+        while (true) {
+            debug = getDebug(getGameScreen());
+            facing = getFacing(debug);
+            yawDiff = targetYaw - facing[0];
+            pitchDiff = targetPitch - facing[1];
+            if (yawDiff < -180) {
+                yawDiff +=360;
+            }
+            if (yawDiff > 180) {
+                yawDiff -=360;
+            }
+            // break logic start
+            double rayVectorY = (-1) * Math.sin(Math.toRadians(facing[1]));
+            double helper1 = Math.cos(Math.toRadians(facing[1]));
+            double rayVectorX = (-1) * Math.sin(Math.toRadians(facing[0])) * helper1;
+            double rayVectorZ = Math.cos(Math.toRadians(facing[0])) * helper1;
+            Vector3D rayVector = new Vector3D(rayVectorX, rayVectorY, rayVectorZ);
+
+            Vector3D intersectVector = Vector3D.intersectPointRay(rayVector, eyePos, planeNormal, planePoint);
+            System.out.println(intersectVector);
+
+            if (intersectVector != null) {
+                double[] intersect = intersectVector.toDoubleArray();
+                double[] targetPosDA = targetPos.toDoubleArray();
+                facingSide = true;
+                for (int i = 0; i < 3; i++) {
+                    if (i != plane) {
+                        if (intersect[i] <= targetPosDA[i] || intersect[i] >= targetPosDA[i] + 1) {
+                            facingSide = false;
+                        }
+                    }
+                }
+            }
+            if (facingSide) break;
+
+
+            if (yawDiff == 0 && pitchDiff == 0) break;
+            // break logic end
+            robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
+            //System.out.println("Moved! x:" + Math.round(yawDiff*10) + " y:" + Math.round(pitchDiff*10));
+            try {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
     static void initMap() throws IOException, InterruptedException {

@@ -130,7 +130,7 @@ public class VeinMinerTreeElement {
 
         for (VeinMinerTreeElement element : allElements) {
             if (element.getType().equals("ore")) {
-                if (this.getPath(element).size() < distance) {
+                if (this.getPath(element).size() <= distance) {
                     currentClosestOre = element;
                 }
             }
