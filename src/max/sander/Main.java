@@ -209,14 +209,49 @@ public class Main {
     }
 
     static boolean followFlatPath(ArrayList<double[]> path) throws InterruptedException {
+        simplifyFlatPath(path);
         int steps = path.size();
         if (steps == 0) return true;
         for (int i = 0; i < steps - 1; i++) {
             if (!moveToBlockRough(path.get(i)[0], path.get(i)[2], 4000)) return false;
         }
         if (!moveToBlockRough(path.get(steps - 1)[0], path.get(steps - 1)[2], 4000)) return false;
-        //fixme this one isn't working all that great
+        //fixme this one isn't working all that great URGENT
         return true;
+    }
+    static ArrayList<double[]> simplifyFlatPath(ArrayList<double[]> path) {
+        int steps = path.size();
+        if (steps <= 2) return path;
+
+        while (true) {
+            boolean foundSomething = false;
+            for (int i = 0; i < steps - 2; i++) {
+                if (path.get(i)[0] == path.get(i + 1)[0] && path.get(i)[0] == path.get(i + 2)[0]) {
+                    path.remove(i+1);
+                    foundSomething = true;
+                    break;
+                }
+                if (path.get(i)[2] == path.get(i + 1)[2] && path.get(i)[2] == path.get(i + 2)[2]) {
+                    path.remove(i+1);
+                    foundSomething = true;
+                    break;
+                }
+            }
+            steps = path.size();
+            if (!foundSomething) break;
+        }
+        return path;
+    }
+    static void printPath(ArrayList<double[]> path) {
+        int steps = path.size();
+        String out = "{";
+        for (int i = 0; i < steps; i++) {
+            out = out + Arrays.toString(path.get(i));
+            if (!(i == steps - 1)) {
+                out = out + ", ";
+            }
+        }
+        System.out.println(out + "}");
     }
 
     static String mineVeinMinerTreeElement(VeinMinerTreeElement currentElement, BlockPosList seenBlocks, boolean levelWithTunnel) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
@@ -239,7 +274,7 @@ public class Main {
         int minedBlockPosDir;
         double xDiff = currentElement.getX() - playerPos.getX();
         double zDiff = currentElement.getZ() - playerPos.getZ();
-        if (xDiff > zDiff) {
+        if (Math.abs(xDiff) > Math.abs(zDiff)) {
             if (xDiff > 0) {
                 minedBlockPosDir = 0;
             } else {
@@ -269,6 +304,7 @@ public class Main {
 
         // upper forward block
         examinedBlockPos = minedBlockPos.forward();
+//        System.out.println("calling reactToScan from  mineVeinMinerTreeElement ufb");
         String x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreForward, fallingsand);
         if (x != null) {
             currentElement.setType("blocked");
@@ -278,6 +314,7 @@ public class Main {
         
         // upper left block
         examinedBlockPos = minedBlockPos.left();
+//        System.out.println("calling reactToScan from  mineVeinMinerTreeElement ulb");
         x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreLeft, fallingsand);
         if (x != null) {
             currentElement.setType("blocked");
@@ -286,7 +323,8 @@ public class Main {
         
         // upper right block
         examinedBlockPos = minedBlockPos.right();
-            x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreRight, fallingsand);
+//        System.out.println("calling reactToScan from  mineVeinMinerTreeElement urb");
+        x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreRight, fallingsand);
         if (x != null) {
             currentElement.setType("blocked");
             return x;
@@ -314,6 +352,7 @@ public class Main {
         
         // lower forward block
         examinedBlockPos = minedBlockPos.forward();
+//        System.out.println("calling reactToScan from  mineVeinMinerTreeElement lfb");
         x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreForward, fallingsand);
         if (x != null) {
             currentElement.setType("blocked");
@@ -322,6 +361,7 @@ public class Main {
 
         // lower left block
         examinedBlockPos = minedBlockPos.left();
+//        System.out.println("calling reactToScan from  mineVeinMinerTreeElement llb");
         x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreLeft, fallingsand);
         if (x != null) {
             currentElement.setType("blocked");
@@ -330,6 +370,7 @@ public class Main {
 
         // lower right block
         examinedBlockPos = minedBlockPos.right();
+//        System.out.println("calling reactToScan from  mineVeinMinerTreeElement lrb");
         x = reactToScan(minedBlockPos, examinedBlockPos, seenBlocks, levelWithTunnel, oreRight, fallingsand);
         if (x != null) {
             currentElement.setType("blocked");
@@ -482,6 +523,7 @@ public class Main {
     private static String reactToScan(BlockPosWithDirection minedBlockPos, BlockPosWithDirection examinedBlockPos, BlockPosList seenBlocks, boolean levelWithTunnel, BooleanHolder ore, BooleanHolder fallingsand) throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException {
         String result;
         String debug;
+        //System.out.println("calling scanBlock from reactToScan");
         result = scanBlock(examinedBlockPos, minedBlockPos, seenBlocks);
         if (result.contains("sand")) fallingsand.set(true);
         if (result.contains("blocked")) return "aborted";
@@ -621,7 +663,7 @@ public class Main {
                 }
             } // end falling sand handling
             if (!examinedBlockPos.equalsDoubleArray(lookingAtBlockPos)) {
-                writeChatDebug("air");
+                writeChatDebug("air 1" + examinedBlockPos.toString());
                 if (seenBlocks.contains(lookingAtBlockPos)) {
                     if (fallingsand) return "tunnel sand";
                     return "tunnel";
@@ -867,25 +909,25 @@ public class Main {
 
         while (Math.abs(diffX) > 0.2 || Math.abs(diffZ) > 0.2) {
 
-            if (diffX < -0.2) {
+            if (diffX <= -0.2) {
                 robot.keyPress(keyXPlus);
                 keyXPlusPressed = true;
             } else if (keyXPlusPressed) {
                 robot.keyRelease(keyXPlus);
             }
-            if (diffX > 0.2) {
+            if (diffX >= 0.2) {
                 robot.keyPress(keyXMinus);
                 keyXMinusPressed = true;
             } else if (keyXMinusPressed) {
                 robot.keyRelease(keyXMinus);
             }
-            if (diffZ < -0.2) {
+            if (diffZ <= -0.2) {
                 robot.keyPress(keyZPlus);
                 keyZPlusPressed = true;
             } else if (keyZPlusPressed) {
                 robot.keyRelease(keyZPlus);
             }
-            if (diffZ > 0.2) {
+            if (diffZ >= 0.2) {
                 robot.keyPress(keyZMinus);
                 keyZMinusPressed = true;
             } else if (keyZMinusPressed) {
@@ -1488,7 +1530,7 @@ public class Main {
     static void mapColorPos(double[] pos, Color color) {
         int mapX = (int) Math.floor(pos[0]) - mapOffsetX;
         int mapZ = (int) Math.floor(pos[2]) - mapOffsetZ;
-        System.out.println("x: "+ mapX+" z: "+mapZ + " game: x: " + (int) Math.floor(pos[0]) + " z: " + (int) Math.floor(pos[2]));
+        //System.out.println("x: "+ mapX+" z: "+mapZ + " game: x: " + (int) Math.floor(pos[0]) + " z: " + (int) Math.floor(pos[2]));
         if (mapX < 0) {
             BufferedImage newMap = new BufferedImage(map.getWidth() + 10, map.getHeight(), BufferedImage.TYPE_INT_RGB);
             Graphics2D g2d = newMap.createGraphics();
@@ -1522,7 +1564,7 @@ public class Main {
         }
         mapX = (int) Math.floor(pos[0]) - mapOffsetX;
         mapZ = (int) Math.floor(pos[2]) - mapOffsetZ;
-        System.out.println("x: "+ mapX+" z: "+mapZ + " game: x: " + (int) Math.floor(pos[0]) + " z: " + (int) Math.floor(pos[2]));
+        //System.out.println("x: "+ mapX+" z: "+mapZ + " game: x: " + (int) Math.floor(pos[0]) + " z: " + (int) Math.floor(pos[2]));
         try {
             map.setRGB(mapX, mapZ, color.getRGB());
 
@@ -2631,698 +2673,6 @@ public class Main {
             default:    System.out.println("invalid character: " + c);
                 break;
         }
-    }
-    static String scanUpperHalf() throws InterruptedException {
-        /*this function will scan the now visible blocks that have emerged after the upper block in a tunnel is mined from a position directly in front of it.
-        * it will also mine falling blocks if they have gotten in the way.
-        * return values shall be as follows
-        * stone     if there is just stone, andesite, granite and dirt
-        * air       if at least one of the blocks is air. same response as fluid
-        * fluid     if a fluid is detected. this shall be responded to with replacing the mined block and maneuvering around the spot
-        * tunnel    if an old tunnel marked on the map is uncovered.
-        * falling   if the mined block is replaced by dirt or gravel from above
-        * ore       if one of the new blocks is ore. mining and re-locating of ore will be done after the second block is mined
-        * monster   if an entity is detected. fallingsand and items are not visible through the debug screen
-        * infested  if silverfish infested stone is detected
-        * unexpected if something unexpected happens
-        *
-        * if multiple returns are possible this is the priority in descending order:
-        * monster
-        * fluid
-        * tunnel
-        * air
-        * infested
-        * ore
-        * stone
-        * */
-        boolean ore = false;
-        boolean fallingsand = false;
-        String debug = getDebug(getGameScreen());
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-
-        pointAt(180 + yawDiff, 17);
-        debug = getDebug(getGameScreen());
-        String block = getLookingAtBlock(debug);
-        double[] blockPos = getLookingAtBlockCoords(debug);
-        double[] playerPos = getPlayerPosFloored(debug);
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-        double[] targetedBlockPos = playerPos.clone();
-        double[] minedBlockPos = playerPos.clone();
-        targetedBlockPos[1] += 1;
-        minedBlockPos[1] += 1;
-        if (debug.contains("positive X")) {
-            targetedBlockPos[0] += 2;
-            minedBlockPos[0] += 1;
-        } else if (debug.contains("negative X")) {
-            targetedBlockPos[0] += -2;
-            minedBlockPos[0] += -1;
-        } else if (debug.contains("positive Z")) {
-            targetedBlockPos[2] += 2;
-            minedBlockPos[2] += 1;
-        } else if (debug.contains("negative Z")) {
-            targetedBlockPos[2] += -2;
-            minedBlockPos[2] += -1;
-        }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-        if (!Arrays.equals(targetedBlockPos, blockPos)) {
-            //writeChat(Arrays.toString(playerPos) + Arrays.toString(minedBlockPos) + Arrays.toString(blockPos));
-            if (Arrays.equals(minedBlockPos, blockPos)) {
-                writeChat("fallingSand");
-                fallingsand = true;
-                pointAt(180 + yawDiff, 45);
-                breakFallingStack();
-                TimeUnit.SECONDS.sleep(5);
-                pointAt(180 + yawDiff, 17);
-                debug = getDebug(getGameScreen());
-                block = getLookingAtBlock(debug);
-                blockPos = getLookingAtBlockCoords(debug);
-                if (debug.contains("Targeted Entity")) return "monster";
-                if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-                if (block.equals("minecraft:torch")) leftClick();
-                TimeUnit.MILLISECONDS.sleep(100);
-                debug = getDebug(getGameScreen());
-                block = getLookingAtBlock(debug);
-                blockPos = getLookingAtBlockCoords(debug);
-                if (debug.contains("Targeted Entity")) return "monster";
-                if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-            }
-            if (!Arrays.equals(targetedBlockPos, blockPos)) {
-                writeChat("air");
-                if (mapGetColor(targetedBlockPos) == black) {
-                    return "tunnel";
-                } else {
-                    mapColorPos(targetedBlockPos, Color.RED);
-                }
-                return "air";
-            }
-        }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                return "infested";
-            case "minecraft:emerald_ore":
-            case "minecraft:gold_ore":
-            case "minecraft:iron_ore":
-            case "minecraft:coal_ore":
-            case "minecraft:diamond_ore":
-            case "minecraft:redstone_ore":
-            case "minecraft:lapis_ore":
-                ore = true;
-                mapColorPos(blockPos, Color.CYAN);
-                break;
-            case "minecraft:cobblestone":
-            case "minecraft:stone":
-            case "minecraft:diorite":
-            case "minecraft:granite":
-            case "minecraft:andesite":
-            case "minecraft:dirt":
-            case "minecraft:sand":
-            case "minecraft:gravel":
-                mapColorPos(blockPos, Color.GRAY);
-            break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                break;
-        }
-
-        // left block
-
-
-        pointAt(150 + yawDiff, 17);
-        debug = getDebug(getGameScreen());
-        block = getLookingAtBlock(debug);
-        blockPos = getLookingAtBlockCoords(debug);
-        playerPos = getPlayerPosFloored(debug);
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-        targetedBlockPos = playerPos.clone();
-        minedBlockPos = playerPos.clone();
-        targetedBlockPos[1] += 1;
-        minedBlockPos[1] += 1;
-        if (debug.contains("positive X")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[0] += 1;
-        } else if (debug.contains("negative X")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[0] += -1;
-        } else if (debug.contains("positive Z")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[2] += 1;
-        } else if (debug.contains("negative Z")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[2] += -1;
-        }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-        if (!Arrays.equals(targetedBlockPos, blockPos)) {
-            if (Arrays.equals(minedBlockPos, blockPos)) {
-                writeChat("fallingSand");
-                fallingsand = true;
-                pointAt(180 + yawDiff, 45);
-                breakFallingStack();
-                TimeUnit.SECONDS.sleep(5);
-                pointAt(150 + yawDiff, 17);
-                debug = getDebug(getGameScreen());
-                block = getLookingAtBlock(debug);
-                blockPos = getLookingAtBlockCoords(debug);
-                if (debug.contains("Targeted Entity")) return "monster";
-                if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-                if (block.equals("minecraft:torch")) leftClick();
-                TimeUnit.MILLISECONDS.sleep(100);
-                debug = getDebug(getGameScreen());
-                block = getLookingAtBlock(debug);
-                blockPos = getLookingAtBlockCoords(debug);
-                if (debug.contains("Targeted Entity")) return "monster";
-                if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-            }
-            if (!Arrays.equals(targetedBlockPos, blockPos)) {
-                writeChat("air");
-                if (mapGetColor(targetedBlockPos) == black) {
-                    return "tunnel";
-                } else {
-                    mapColorPos(targetedBlockPos, Color.RED);
-                }
-                return "air";
-            }
-
-        }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                return "infested";
-            case "minecraft:emerald_ore":
-            case "minecraft:gold_ore":
-            case "minecraft:iron_ore":
-            case "minecraft:coal_ore":
-            case "minecraft:diamond_ore":
-            case "minecraft:redstone_ore":
-            case "minecraft:lapis_ore":
-                ore = true;
-                mapColorPos(blockPos, Color.CYAN);
-                break;
-            case "minecraft:cobblestone":
-            case "minecraft:stone":
-            case "minecraft:diorite":
-            case "minecraft:granite":
-            case "minecraft:andesite":
-                case "minecraft:dirt":
-                case "minecraft:sand":
-                case "minecraft:gravel":
-                    mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure or i missed a usual underground block");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                break;
-        }
-
-        // right block
-
-
-        pointAt(-150 + yawDiff, 17);
-        debug = getDebug(getGameScreen());
-        block = getLookingAtBlock(debug);
-        blockPos = getLookingAtBlockCoords(debug);
-        playerPos = getPlayerPosFloored(debug);
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-        targetedBlockPos = playerPos.clone();
-        minedBlockPos = playerPos.clone();
-        targetedBlockPos[1] += 1;
-        minedBlockPos[1] += 1;
-        if (debug.contains("positive X")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[0] += 1;
-        } else if (debug.contains("negative X")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[0] += -1;
-        } else if (debug.contains("positive Z")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[2] += 1;
-        } else if (debug.contains("negative Z")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[2] += -1;
-        }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-        if (!Arrays.equals(targetedBlockPos, blockPos)) {
-            if (Arrays.equals(minedBlockPos, blockPos)) {
-                writeChat("fallingSand");
-                fallingsand = true;
-                pointAt(180 + yawDiff, 45);
-                breakFallingStack();
-                TimeUnit.SECONDS.sleep(5);
-                pointAt(-150 + yawDiff, 17);
-                debug = getDebug(getGameScreen());
-                block = getLookingAtBlock(debug);
-                blockPos = getLookingAtBlockCoords(debug);
-                if (debug.contains("Targeted Entity")) return "monster";
-                if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-                if (block.equals("minecraft:torch")) leftClick();
-                TimeUnit.MILLISECONDS.sleep(100);
-                debug = getDebug(getGameScreen());
-                block = getLookingAtBlock(debug);
-                blockPos = getLookingAtBlockCoords(debug);
-                if (debug.contains("Targeted Entity")) return "monster";
-                if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-            }
-            if (!Arrays.equals(targetedBlockPos, blockPos)) {
-                writeChat("air");
-                if (mapGetColor(targetedBlockPos) == black) {
-                    return "tunnel";
-                } else {
-                    mapColorPos(targetedBlockPos, Color.RED);
-                }
-                return "air";
-            }
-        }
-
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                return "infested";
-            case "minecraft:emerald_ore":
-            case "minecraft:gold_ore":
-            case "minecraft:iron_ore":
-            case "minecraft:coal_ore":
-            case "minecraft:diamond_ore":
-            case "minecraft:redstone_ore":
-            case "minecraft:lapis_ore":
-                ore = true;
-                mapColorPos(blockPos, Color.CYAN);
-                break;
-            case "minecraft:cobblestone":
-            case "minecraft:stone":
-            case "minecraft:diorite":
-            case "minecraft:granite":
-            case "minecraft:andesite":
-                case "minecraft:dirt":
-                case "minecraft:sand":
-                case "minecraft:gravel":
-                    mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure or i missed a usual underground block");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                break;
-        }
-
-
-        // top block
-
-
-        if (!fallingsand) {
-            pointAt(180 + yawDiff, -25);
-            debug = getDebug(getGameScreen());
-            block = getLookingAtBlock(debug);
-            blockPos = getLookingAtBlockCoords(debug);
-            playerPos = getPlayerPosFloored(debug);
-            if (debug.contains("Targeted Entity")) return "monster";
-            if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-            targetedBlockPos = playerPos.clone();
-            minedBlockPos = playerPos.clone();
-            targetedBlockPos[1] += 2;
-            minedBlockPos[1] += 1;
-            if (debug.contains("positive X")) {
-                targetedBlockPos[0] += 1;
-                minedBlockPos[0] += 1;
-            } else if (debug.contains("negative X")) {
-                targetedBlockPos[0] += -1;
-                minedBlockPos[0] += -1;
-            } else if (debug.contains("positive Z")) {
-                targetedBlockPos[2] += 1;
-                minedBlockPos[2] += 1;
-            } else if (debug.contains("negative Z")) {
-                targetedBlockPos[2] += -1;
-                minedBlockPos[2] += -1;
-            }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-            if (!Arrays.equals(targetedBlockPos, blockPos)) {
-                //writeChat(Arrays.toString(playerPos) + Arrays.toString(minedBlockPos) + Arrays.toString(blockPos));
-                writeChat("air");
-                if (mapGetColor(targetedBlockPos) == black) {
-                    return "tunnel";
-                } else {
-                    mapColorPos(targetedBlockPos, Color.RED);
-                }
-                return "air";
-
-            }
-            switch (block) {
-                case "minecraft:infested_stone":
-                    mapColorPos(blockPos, Color.ORANGE);
-                    return "infested";
-                case "minecraft:emerald_ore":
-                case "minecraft:gold_ore":
-                case "minecraft:iron_ore":
-                case "minecraft:coal_ore":
-                case "minecraft:diamond_ore":
-                case "minecraft:redstone_ore":
-                case "minecraft:lapis_ore":
-                    ore = true;
-                    mapColorPos(blockPos, Color.MAGENTA);
-                    break;
-                case "minecraft:cobblestone":
-                case "minecraft:stone":
-                case "minecraft:diorite":
-                case "minecraft:granite":
-                case "minecraft:andesite":
-                case "minecraft:dirt":
-                case "minecraft:sand":
-                case "minecraft:gravel":
-                    break;
-                default:
-                    mapColorPos(blockPos, Color.BLUE);
-                    writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure or i missed a usual underground block");
-                    System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                    break;
-            }
-        }
-
-
-        // done checking blocks
-
-        if (ore) return "ore";
-
-        return "stone";
-    }
-    static String scanLowerHalf() throws InterruptedException {
-
-        boolean ore = false;
-//        boolean fallingsand = false;
-        String debug = getDebug(getGameScreen());
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-
-        pointAt(180 + yawDiff, 42);
-        debug = getDebug(getGameScreen());
-        String block = getLookingAtBlock(debug);
-        double[] blockPos = getLookingAtBlockCoords(debug);
-        double[] playerPos = getPlayerPosFloored(debug);
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-        double[] targetedBlockPos = playerPos.clone();
-        double[] minedBlockPos = playerPos.clone();
-        if (debug.contains("positive X")) {
-            targetedBlockPos[0] += 2;
-            minedBlockPos[0] += 1;
-        } else if (debug.contains("negative X")) {
-            targetedBlockPos[0] += -2;
-            minedBlockPos[0] += -1;
-        } else if (debug.contains("positive Z")) {
-            targetedBlockPos[2] += 2;
-            minedBlockPos[2] += 1;
-        } else if (debug.contains("negative Z")) {
-            targetedBlockPos[2] += -2;
-            minedBlockPos[2] += -1;
-        }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-        if (!Arrays.equals(targetedBlockPos, blockPos)) {
-            //writeChat(Arrays.toString(playerPos) + Arrays.toString(minedBlockPos) + Arrays.toString(blockPos));
-            if (Arrays.equals(minedBlockPos, blockPos)) {
-                writeChat("something unexpected happened");
-                return "unexpected";
-            }
-            if (!Arrays.equals(targetedBlockPos, blockPos)) {
-                writeChat("air");
-                if (mapGetColor(targetedBlockPos) == black) {
-                    return "tunnel";
-                } else {
-                    mapColorPos(targetedBlockPos, Color.RED);
-                }
-                return "air";
-            }
-        }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                return "infested";
-            case "minecraft:emerald_ore":
-            case "minecraft:gold_ore":
-            case "minecraft:iron_ore":
-            case "minecraft:coal_ore":
-            case "minecraft:diamond_ore":
-            case "minecraft:redstone_ore":
-            case "minecraft:lapis_ore":
-                ore = true;
-                mapColorPos(blockPos, Color.CYAN);
-                break;
-            case "minecraft:cobblestone":
-            case "minecraft:stone":
-            case "minecraft:diorite":
-            case "minecraft:granite":
-            case "minecraft:andesite":
-            case "minecraft:dirt":
-            case "minecraft:sand":
-            case "minecraft:gravel":
-                mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                break;
-        }
-
-        // left block
-
-
-        pointAt(150 + yawDiff, 42);
-        debug = getDebug(getGameScreen());
-        block = getLookingAtBlock(debug);
-        blockPos = getLookingAtBlockCoords(debug);
-        playerPos = getPlayerPosFloored(debug);
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-        targetedBlockPos = playerPos.clone();
-        minedBlockPos = playerPos.clone();
-        if (debug.contains("positive X")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[0] += 1;
-        } else if (debug.contains("negative X")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[0] += -1;
-        } else if (debug.contains("positive Z")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[2] += 1;
-        } else if (debug.contains("negative Z")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[2] += -1;
-        }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-        if (!Arrays.equals(targetedBlockPos, blockPos)) {
-            //writeChat(Arrays.toString(playerPos) + Arrays.toString(minedBlockPos) + Arrays.toString(blockPos));
-            writeChat("air");
-            if (mapGetColor(targetedBlockPos) == black) {
-                return "tunnel";
-            } else {
-                mapColorPos(targetedBlockPos, Color.RED);
-            }
-            return "air";
-
-        }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                return "infested";
-            case "minecraft:emerald_ore":
-            case "minecraft:gold_ore":
-            case "minecraft:iron_ore":
-            case "minecraft:coal_ore":
-            case "minecraft:diamond_ore":
-            case "minecraft:redstone_ore":
-            case "minecraft:lapis_ore":
-                ore = true;
-                mapColorPos(blockPos, Color.CYAN);
-                break;
-            case "minecraft:cobblestone":
-            case "minecraft:stone":
-            case "minecraft:diorite":
-            case "minecraft:granite":
-            case "minecraft:andesite":
-            case "minecraft:dirt":
-            case "minecraft:sand":
-            case "minecraft:gravel":
-                mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure or i missed a usual underground block");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                break;
-        }
-
-        // right block
-
-
-        pointAt(-150 + yawDiff, 42);
-        debug = getDebug(getGameScreen());
-        block = getLookingAtBlock(debug);
-        blockPos = getLookingAtBlockCoords(debug);
-        playerPos = getPlayerPosFloored(debug);
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-        targetedBlockPos = playerPos.clone();
-        minedBlockPos = playerPos.clone();
-        if (debug.contains("positive X")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[0] += 1;
-        } else if (debug.contains("negative X")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[0] += -1;
-        } else if (debug.contains("positive Z")) {
-            targetedBlockPos[0] += -1;
-            targetedBlockPos[2] += 1;
-            minedBlockPos[2] += 1;
-        } else if (debug.contains("negative Z")) {
-            targetedBlockPos[0] += 1;
-            targetedBlockPos[2] += -1;
-            minedBlockPos[2] += -1;
-        }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-        if (!Arrays.equals(targetedBlockPos, blockPos)) {
-            //writeChat(Arrays.toString(playerPos) + Arrays.toString(minedBlockPos) + Arrays.toString(blockPos));
-
-            if (mapGetColor(targetedBlockPos) == black) {
-                return "tunnel";
-            } else {
-                mapColorPos(targetedBlockPos, Color.RED);
-            }
-            return "air";
-
-        }
-
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                return "infested";
-            case "minecraft:emerald_ore":
-            case "minecraft:gold_ore":
-            case "minecraft:iron_ore":
-            case "minecraft:coal_ore":
-            case "minecraft:diamond_ore":
-            case "minecraft:redstone_ore":
-            case "minecraft:lapis_ore":
-                ore = true;
-                mapColorPos(blockPos, Color.CYAN);
-                break;
-            case "minecraft:cobblestone":
-            case "minecraft:stone":
-            case "minecraft:diorite":
-            case "minecraft:granite":
-            case "minecraft:andesite":
-            case "minecraft:dirt":
-            case "minecraft:sand":
-            case "minecraft:gravel":
-                mapColorPos(blockPos, Color.GRAY);
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure or i missed a usual underground block");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                break;
-        }
-
-
-        // bottom block
-
-
-        pointAt(180 + yawDiff, 60);
-        debug = getDebug(getGameScreen());
-        block = getLookingAtBlock(debug);
-        blockPos = getLookingAtBlockCoords(debug);
-        playerPos = getPlayerPosFloored(debug);
-        if (debug.contains("Targeted Entity")) return "monster";
-        if (!getLookingAtFluid(debug).equals("minecraft:empty")) return "fluid";
-        targetedBlockPos = playerPos.clone();
-        minedBlockPos = playerPos.clone();
-        targetedBlockPos[1] += -1;
-        minedBlockPos[1] += 1;
-        if (debug.contains("positive X")) {
-            targetedBlockPos[0] += 1;
-            minedBlockPos[0] += 1;
-        } else if (debug.contains("negative X")) {
-            targetedBlockPos[0] += -1;
-            minedBlockPos[0] += -1;
-        } else if (debug.contains("positive Z")) {
-            targetedBlockPos[2] += 1;
-            minedBlockPos[2] += 1;
-        } else if (debug.contains("negative Z")) {
-            targetedBlockPos[2] += -1;
-            minedBlockPos[2] += -1;
-        }
-//        mapColorPos(minedBlockPos, Color.BLUE);
-        if (!Arrays.equals(targetedBlockPos, blockPos)) {
-            //writeChat(Arrays.toString(playerPos) + Arrays.toString(minedBlockPos) + Arrays.toString(blockPos));
-            writeChat("air");
-            if (mapGetColor(targetedBlockPos) == black) {
-                return "tunnel";
-            } else {
-                mapColorPos(targetedBlockPos, Color.RED);
-            }
-            return "air";
-
-        }
-        switch (block) {
-            case "minecraft:infested_stone":
-                mapColorPos(blockPos, Color.ORANGE);
-                return "infested";
-            case "minecraft:emerald_ore":
-            case "minecraft:gold_ore":
-            case "minecraft:iron_ore":
-            case "minecraft:coal_ore":
-            case "minecraft:diamond_ore":
-            case "minecraft:redstone_ore":
-            case "minecraft:lapis_ore":
-                ore = true;
-                if (mapGetColor(blockPos) == Color.MAGENTA.getRGB()) {
-                    mapColorPos(blockPos, Color.YELLOW);
-                } else {
-                    mapColorPos(blockPos, Color.PINK);
-                }
-                break;
-            case "minecraft:cobblestone":
-            case "minecraft:stone":
-            case "minecraft:diorite":
-            case "minecraft:granite":
-            case "minecraft:andesite":
-            case "minecraft:dirt":
-            case "minecraft:sand":
-            case "minecraft:gravel":
-                break;
-            default:
-                mapColorPos(blockPos, Color.BLUE);
-                writeChat(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure or i missed a usual underground block");
-                System.out.println(block + " at position " + Arrays.toString(blockPos) + " this is probably a structure.");
-                break;
-        }
-
-
-
-        // done checking blocks
-
-        if (ore) return "ore";
-
-        mapColorPos(minedBlockPos, Color.BLACK);
-        return "stone";
     }
     //TODO here is the map comment
     /*
