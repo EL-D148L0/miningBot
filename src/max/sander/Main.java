@@ -112,6 +112,7 @@ public class Main {
             debug = getDebug(getGameScreen());
 
             mineVeinTunnelLevel();
+//            System.out.println(moveToBlock(49, 41, 10000));
             /*BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward();
             moveToBlockRough(bp1.getX(), bp1.getZ(), 2000);*/
             /*pointAtSide(bp1.down(0.5));
@@ -201,7 +202,7 @@ public class Main {
         ArrayList<double[]> path = currentLocation.getPath(root);
         if (followFlatPath(path)) {
             return "done";
-        } else throw new UnexpectedGameBehaviourException("movement was apparently blocked on a known route");
+        } else throw new UnexpectedGameBehaviourException("movement was apparently blocked on a known route or the pathfollowing function still doesn't work.");
 
 
         //TODO fleeing mechanics must contain map recolouring of cutoff tunnel part
@@ -212,11 +213,12 @@ public class Main {
         simplifyFlatPath(path);
         int steps = path.size();
         if (steps == 0) return true;
-        for (int i = 0; i < steps - 1; i++) {
-            if (!moveToBlockRough(path.get(i)[0], path.get(i)[2], 4000)) return false;
+        // ignores first step
+        for (int i = 1; i < steps - 1; i++) {
+            if (!moveToBlock(path.get(i)[0], path.get(i)[2], 10000)) return false;
         }
-        if (!moveToBlockRough(path.get(steps - 1)[0], path.get(steps - 1)[2], 4000)) return false;
-        //fixme this one isn't working all that great URGENT
+        if (!moveToBlock(path.get(steps - 1)[0], path.get(steps - 1)[2], 10000)) return false;
+        //fixme this one isn't working all that great
         return true;
     }
     static ArrayList<double[]> simplifyFlatPath(ArrayList<double[]> path) {
@@ -759,6 +761,8 @@ public class Main {
         double[] playerPos = getPlayerPos(debug);
         double diffX = playerPos[0] - x;
         double diffZ = playerPos[2] - z;
+
+        if (!(Math.abs(diffX) >= 0.2 || Math.abs(diffZ) >= 0.2)) return true;
         int keyXPlus;
         int keyXMinus;
         int keyZPlus;
@@ -797,8 +801,64 @@ public class Main {
 
         long end = System.currentTimeMillis() + timeout;
 
-        if (!moveToBlockRough(x, z, timeout)) return false;
+        //if (!moveToBlockRough(x, z, timeout)) return false;
 
+
+        while (Math.abs(diffX) >= 0.5 || Math.abs(diffZ) >= 0.5) {
+
+            if (diffX <= -0.5) {
+                robot.keyPress(keyXPlus);
+                keyXPlusPressed = true;
+            } else if (keyXPlusPressed) {
+                robot.keyRelease(keyXPlus);
+            }
+            if (diffX >= 0.5) {
+                robot.keyPress(keyXMinus);
+                keyXMinusPressed = true;
+            } else if (keyXMinusPressed) {
+                robot.keyRelease(keyXMinus);
+            }
+            if (diffZ <= -0.5) {
+                robot.keyPress(keyZPlus);
+                keyZPlusPressed = true;
+            } else if (keyZPlusPressed) {
+                robot.keyRelease(keyZPlus);
+            }
+            if (diffZ >= 0.5) {
+                robot.keyPress(keyZMinus);
+                keyZMinusPressed = true;
+            } else if (keyZMinusPressed) {
+                robot.keyRelease(keyZMinus);
+            }
+
+            debug = getDebug(getGameScreen());
+            playerPos = getPlayerPos(debug);
+            diffX = playerPos[0] - x;
+            diffZ = playerPos[2] - z;
+
+            if (System.currentTimeMillis() > end) break;
+        }
+
+        if (keyXPlusPressed) {
+            robot.keyRelease(keyXPlus);
+        }
+        if (keyXMinusPressed) {
+            robot.keyRelease(keyXMinus);
+        }
+        if (keyZPlusPressed) {
+            robot.keyRelease(keyZPlus);
+        }
+        if (keyZMinusPressed) {
+            robot.keyRelease(keyZMinus);
+        }
+        robot.keyPress(KeyEvent.VK_SHIFT);
+
+        TimeUnit.MILLISECONDS.sleep(30);
+
+        debug = getDebug(getGameScreen());
+        playerPos = getPlayerPos(debug);
+        diffX = playerPos[0] - x;
+        diffZ = playerPos[2] - z;
 
         while (Math.abs(diffX) > 0.2 || Math.abs(diffZ) > 0.2) {
 
@@ -832,7 +892,7 @@ public class Main {
                 robot.keyRelease(keyZMinus);
             }
 
-            TimeUnit.MILLISECONDS.sleep(20);
+            TimeUnit.MILLISECONDS.sleep(30);
 
             debug = getDebug(getGameScreen());
             playerPos = getPlayerPos(debug);
@@ -854,6 +914,7 @@ public class Main {
         if (keyZMinusPressed) {
             robot.keyRelease(keyZMinus);
         }
+        robot.keyRelease(KeyEvent.VK_SHIFT);
 
 
         return !(Math.abs(diffX) > 0.2 || Math.abs(diffZ) > 0.2);
@@ -907,7 +968,7 @@ public class Main {
         long end = System.currentTimeMillis() + timeout;
 
 
-        while (Math.abs(diffX) > 0.2 || Math.abs(diffZ) > 0.2) {
+        while (Math.abs(diffX) >= 0.2 || Math.abs(diffZ) >= 0.2) {
 
             if (diffX <= -0.2) {
                 robot.keyPress(keyXPlus);
