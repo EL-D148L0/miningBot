@@ -1,6 +1,9 @@
 package max.sander;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class VeinMinerTreeElement {
     static VeinMinerTreeElement root;
@@ -45,6 +48,7 @@ public class VeinMinerTreeElement {
             element.delete();
         }
         allElements.clear();
+        //todo test if this it creates an exception;
     }
     static boolean isCleared() {
         boolean clear = true;
@@ -62,7 +66,6 @@ public class VeinMinerTreeElement {
             if (element == this) continue;
             if (element.getX() == x && element.getY() == y && element.getZ() == z && element.getType().equals("ore")) element.setType("mined");
         }
-
     }
 
     public String getType() {
@@ -116,7 +119,7 @@ public class VeinMinerTreeElement {
             }
             steps.add(element.positionToDoubleArray());
         }
-        if (closestCommonParent == null) throw new HowDidThisHappenException("tree building and maintainig musst be done wrong if this happens");
+        if (closestCommonParent == null) throw new HowDidThisHappenException("tree building and maintaining must be done wrong if this happens");
         for (int i = destinationAndParents.indexOf(closestCommonParent); i >= 0; i--) {
             steps.add(destinationAndParents.get(i).positionToDoubleArray());
         }
@@ -124,20 +127,56 @@ public class VeinMinerTreeElement {
         return steps;
     }
 
+    /*
+     * done
+     *  getNextOre zu einer breitensuche umbauen
+     *  hashSet für visited erstellen
+     *  queue die von suchelement aus nach oben und unten sucht, richtung mit in queue packen
+     *  wenn richtung blätter dann kinder in die queue
+     *  wenn richtung wurzel dann kinder die nicht visited sind und parent in die queue
+     * */
     public VeinMinerTreeElement getNextOre() throws HowDidThisHappenException {
+        // i'm just gonna believe this works till proven otherwise
         VeinMinerTreeElement currentClosestOre = null;
-        int distance = 1000000;//just a high number
 
-        for (VeinMinerTreeElement element : allElements) {
-            if (element.getType().equals("ore")) {
-                if (this.getPath(element).size() <= distance) {
-                    currentClosestOre = element;
+        HashSet<VeinMinerTreeElement> visited = new HashSet<VeinMinerTreeElement>();
+        Queue<Pair<VeinMinerTreeElement, Boolean>> queue = new LinkedList<>();
+        //true ist richtung blätter
+        for (VeinMinerTreeElement element: this.getSubElements()) {
+            queue.add(new Pair<>(element, true));
+        }
+        if (this.parent != null) {
+            queue.add(new Pair<>(this.parent, false));
+        }
+        visited.add(this);
+
+        while (queue.size() > 0) {
+            Pair<VeinMinerTreeElement, Boolean> currentElement = queue.remove();
+            VeinMinerTreeElement queueElement = currentElement.getFirst();
+            visited.add(queueElement);
+            if (queueElement.getType().equals("ore")) return queueElement;
+            if (currentElement.getSecond()) {
+                for (VeinMinerTreeElement element : queueElement.getSubElements()) {
+                    queue.add(new Pair<>(element, true));
+                }
+            } else {
+                if (queueElement.parent != null) {
+                    queue.add(new Pair<>(queueElement.parent, false));
+                }
+                for (VeinMinerTreeElement element : queueElement.getSubElements()) {
+                    if (!visited.contains(element)) {
+                        queue.add(new Pair<>(element, true));
+                    }
                 }
             }
         }
 
+
+
+
         return currentClosestOre;
     }
+
 
     public ArrayList<VeinMinerTreeElement> getThisAndParents() {
         ArrayList<VeinMinerTreeElement> thisAndParents = new ArrayList<VeinMinerTreeElement>();
