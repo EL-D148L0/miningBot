@@ -111,7 +111,9 @@ public class Main {
 
             debug = getDebug(getGameScreen());
 
-            mineVeinTunnelLevel();
+            //mineVeinTunnelLevel();
+            moveToBlockFlat(new BlockPosWithDirection(49, 55, 41, 0), 100000, 0.5);
+
 //            System.out.println(moveToBlock(49, 41, 10000));
             /*BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward();
             moveToBlockRough(bp1.getX(), bp1.getZ(), 2000);*/
@@ -220,6 +222,78 @@ public class Main {
         if (!moveToBlock(path.get(steps - 1)[0], path.get(steps - 1)[2], 10000)) return false;
         //fixme this one isn't working all that great
         return true;
+    }
+    static boolean followFlatPath2(ArrayList<double[]> path) throws InterruptedException {
+        simplifyFlatPath(path);
+        int steps = path.size();
+        if (steps == 0) return true;
+        // ignores first step
+        String debug;
+        for (int i = 1; i < steps - 1; i++) {
+
+
+
+        }
+        if (!moveToBlock(path.get(steps - 1)[0], path.get(steps - 1)[2], 10000)) return false;
+        return true;
+    }
+
+    static boolean moveToBlockFlat(BlockPosWithDirection targetBPWD, int timeout, double accuracy) throws InterruptedException {
+
+
+        String debug = getDebug(getGameScreen());
+
+        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        int mouseX = mouseLocation.x;
+        int mouseY = mouseLocation.y;
+        double[] facing;
+        double yawDiff;
+        double pitchDiff;
+
+        double targetYaw = getPointAtYaw(targetBPWD, debug);
+        double targetPitch = getPointAtPitch(targetBPWD, debug);
+
+
+        targetYaw = round(targetYaw, 1);
+        targetPitch = round(targetPitch, 1);
+        robot.keyPress(KeyEvent.VK_W);
+
+        double x = Math.floor(targetBPWD.getX()) + 0.5;
+        double z = Math.floor(targetBPWD.getZ()) + 0.5;
+        double[] playerPos;
+        double diffX;
+        double diffZ;
+        while (true) {
+            debug = getDebug(getGameScreen());
+            facing = getFacing(debug);
+            targetYaw = getPointAtYaw(targetBPWD, debug);
+            targetPitch = getPointAtPitch(targetBPWD, debug);
+            yawDiff = targetYaw - facing[0];
+            pitchDiff = targetPitch - facing[1];
+            if (yawDiff < -180) {
+                yawDiff +=360;
+            }
+            if (yawDiff > 180) {
+                yawDiff -=360;
+            }
+
+            playerPos = getPlayerPos(debug);
+            diffX = playerPos[0] - x;
+            diffZ = playerPos[2] - z;
+            if (!(Math.abs(diffX) >= accuracy || Math.abs(diffZ) >= accuracy)) break;
+            robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
+            //System.out.println("Moved! x:" + Math.round(yawDiff*10) + " y:" + Math.round(pitchDiff*10));
+            try {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        robot.keyRelease(KeyEvent.VK_W);
+        return true;
+    }
+    static boolean moveToBlockFlat(BlockPosWithDirection targetBPWD, int timeout) throws InterruptedException {
+        return moveToBlockFlat(targetBPWD, timeout, 0.2);
     }
     static ArrayList<double[]> simplifyFlatPath(ArrayList<double[]> path) {
         int steps = path.size();
@@ -1113,6 +1187,39 @@ public class Main {
 
         pointAt(targetYaw, targetPitch);
 
+    }
+
+    static double getPointAtYaw(BlockPosWithDirection targetPos, String debug) {
+        double eyeHeight = 1.62;
+        double[] playerPos = getPlayerPos(debug);
+        double xDiff = (playerPos[0] - (targetPos.getX()+ 0.5));
+        double zDiff = (playerPos[2] - (targetPos.getZ()+ 0.5));
+        double[] facing = getFacing(debug);
+        double targetYaw = facing[0];
+        if (xDiff == 0) {
+            if (zDiff < 0) {
+                targetYaw = 0;
+            } else if (zDiff > 0) {
+                targetYaw = 180;
+            }
+        } else if (xDiff > 0) {
+            targetYaw = Math.toDegrees(Math.atan(zDiff / xDiff)) + 90;
+        } else if (xDiff < 0) {
+            targetYaw = Math.toDegrees(Math.atan(zDiff / xDiff)) - 90;
+        }
+
+        return targetYaw;
+    }
+    static double getPointAtPitch(BlockPosWithDirection targetPos, String debug) {
+        double eyeHeight = 1.62;
+        double[] playerPos = getPlayerPos(debug);
+        double yDiff = ((playerPos[1] + eyeHeight) - (targetPos.getY()+ 0.5));
+        double[] facing = getFacing(debug);
+        double targetPitch = facing[1];
+
+        double distance = distance3D(playerPos, targetPos.down(eyeHeight).addX(0.5).addY(0.5).addZ(0.5).toDoubleArray());
+        if (distance != 0) targetPitch = Math.toDegrees(Math.asin(yDiff/distance));
+        return targetPitch;
     }
     static void pointAtSide(BlockPosWithDirection targetPos) throws InterruptedException, HowDidThisHappenException {
         //only works with BlockPosWithDirections that are 0.5 off from full blocks.

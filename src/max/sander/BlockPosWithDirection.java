@@ -26,6 +26,13 @@ public class BlockPosWithDirection {
         this.z = z;
         this.direction = dir;
     }
+
+    public BlockPosWithDirection(double[] pos, int dir) {
+        this.x = pos[0];
+        this.y = pos[1];
+        this.z = pos[2];
+        this.direction = dir;
+    }
     public BlockPosWithDirection up() {
         return up(1);
     }
