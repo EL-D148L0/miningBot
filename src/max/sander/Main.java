@@ -113,10 +113,8 @@ public class Main {
 
             //mineVeinTunnelLevel();
             BlockPosWithDirection testBPWD = new BlockPosWithDirection(49, 57, 41, 0);
-            moveToBlockFlat(testBPWD, 100000, 0.5);
-            robot.keyPress(KeyEvent.VK_SHIFT);
-            moveToBlockFlat(testBPWD, 100000, 0.2);
-            robot.keyRelease(KeyEvent.VK_SHIFT);
+            moveToBlockFlatCombined(testBPWD, Timeout.newTimeout(5000));
+
 
 //            System.out.println(moveToBlock(49, 41, 10000));
             /*BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward();
@@ -241,22 +239,21 @@ public class Main {
         if (!moveToBlock(path.get(steps - 1)[0], path.get(steps - 1)[2], 10000)) return false;
         return true;
     }
-    static boolean moveToBlockFlatCombined(BlockPosWithDirection targetBPWD, int timeout) throws InterruptedException {
+    static boolean moveToBlockFlatCombined(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException {
 
-
-        moveToBlockFlat(targetBPWD, 100000, 0.5);
+        moveToBlockFlat(targetBPWD, timeoutID, 0.5);
         robot.keyPress(KeyEvent.VK_SHIFT);
-        moveToBlockFlat(targetBPWD, 100000, 0.2);
+        moveToBlockFlat(targetBPWD, timeoutID, 0.2);
         robot.keyRelease(KeyEvent.VK_SHIFT);
 
         TimeUnit.MILLISECONDS.sleep(50);
         return true;
     }
 
-    static boolean moveToBlockFlat(BlockPosWithDirection targetBPWD, int timeout, double accuracy) throws InterruptedException {
+    static boolean moveToBlockFlat(BlockPosWithDirection targetBPWD, int timeoutID, double accuracy) throws InterruptedException {
 
 
-        //todo add timeout timing out
+
         String debug = getDebug(getGameScreen());
 
         Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
@@ -300,16 +297,20 @@ public class Main {
             robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
             //System.out.println("Moved! x:" + Math.round(yawDiff*10) + " y:" + Math.round(pitchDiff*10));
             try {
+                if (Timeout.hasExpired(timeoutID)) {
+                    robot.keyRelease(KeyEvent.VK_W);
+                    return false;
+                }
                 TimeUnit.MILLISECONDS.sleep(50);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         robot.keyRelease(KeyEvent.VK_W);
         return true;
     }
-    static boolean moveToBlockFlat(BlockPosWithDirection targetBPWD, int timeout) throws InterruptedException {
-        return moveToBlockFlat(targetBPWD, timeout, 0.2);
+    static boolean moveToBlockFlat(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException {
+        return moveToBlockFlat(targetBPWD, timeoutID, 0.2);
     }
     static ArrayList<double[]> simplifyFlatPath(ArrayList<double[]> path) {
         int steps = path.size();
@@ -1809,9 +1810,11 @@ public class Main {
                 }
             }
             if (!isNotMinecraft) {
+                Timeout.resumeTimeouts();
                 return img;
             } else {
                 if (firstRun) {
+                    Timeout.pauseTimeouts();
                     System.out.print("Minecraft not running");
                     firstRun = false;
                 } else {
@@ -1832,6 +1835,7 @@ public class Main {
                 TimeUnit.MILLISECONDS.sleep(100);
             }
         }
+        Timeout.resumeTimeouts();
         return robot.createScreenCapture(new Rectangle(0, 23, 1920, 1040 - 23));
     }
     static BufferedImage getGameScreenOld() {

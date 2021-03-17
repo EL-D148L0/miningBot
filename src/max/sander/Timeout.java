@@ -33,14 +33,18 @@ public class Timeout {
         return newID;
     }
 
-    public static void pauseTimeouts() throws HowDidThisHappenException {
-        if (paused) throw new HowDidThisHappenException("tried to pause already paused timeout");
+    public static void pauseTimeouts() {
+        if (paused) {
+            System.out.println("tried to pause while paused");
+            return;
+        }
+
         pauseStart = System.currentTimeMillis();
         paused = true;
     }
 
-    public static void resumeTimeouts() throws HowDidThisHappenException {
-        if (!paused) throw new HowDidThisHappenException("tried to resume not paused timeout");
+    public static void resumeTimeouts() {
+        if (!paused) return;
         long pauseLength = System.currentTimeMillis() - pauseStart;
 
         for (Timeout t :
