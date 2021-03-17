@@ -111,9 +111,9 @@ public class Main {
 
             debug = getDebug(getGameScreen());
 
-            //mineVeinTunnelLevel();
-            BlockPosWithDirection testBPWD = new BlockPosWithDirection(49, 57, 41, 0);
-            moveToBlockFlatCombined(testBPWD, Timeout.newTimeout(5000));
+            mineVeinTunnelLevel();
+//            BlockPosWithDirection testBPWD = new BlockPosWithDirection(49, 57, 41, 0);
+//            moveToBlockFlatCombined(testBPWD, Timeout.newTimeout(5000));
 
 
 //            System.out.println(moveToBlock(49, 41, 10000));
@@ -213,7 +213,7 @@ public class Main {
 
     }
 
-    static boolean followFlatPath(ArrayList<double[]> path) throws InterruptedException {
+    static boolean followFlatPathOld(ArrayList<double[]> path) throws InterruptedException {
         simplifyFlatPath(path);
         int steps = path.size();
         if (steps == 0) return true;
@@ -225,18 +225,16 @@ public class Main {
         //fixme this one isn't working all that great
         return true;
     }
-    static boolean followFlatPath2(ArrayList<double[]> path) throws InterruptedException {
+    static boolean followFlatPath(ArrayList<double[]> path) throws InterruptedException {
+        //well now it works but it looks like a confused chicken
         simplifyFlatPath(path);
         int steps = path.size();
         if (steps == 0) return true;
         // ignores first step
-        String debug;
         for (int i = 1; i < steps - 1; i++) {
-
-
-
+            if (!moveToBlockFlatCombined(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
         }
-        if (!moveToBlock(path.get(steps - 1)[0], path.get(steps - 1)[2], 10000)) return false;
+        if (!moveToBlockFlatCombined(new BlockPosWithDirection(path.get(steps - 1), 0), Timeout.newTimeout(5000))) return false;
         return true;
     }
     static boolean moveToBlockFlatCombined(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException {
