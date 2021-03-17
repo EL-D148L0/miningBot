@@ -112,7 +112,11 @@ public class Main {
             debug = getDebug(getGameScreen());
 
             //mineVeinTunnelLevel();
-            moveToBlockFlat(new BlockPosWithDirection(49, 55, 41, 0), 100000, 0.5);
+            BlockPosWithDirection testBPWD = new BlockPosWithDirection(49, 57, 41, 0);
+            moveToBlockFlat(testBPWD, 100000, 0.5);
+            robot.keyPress(KeyEvent.VK_SHIFT);
+            moveToBlockFlat(testBPWD, 100000, 0.2);
+            robot.keyRelease(KeyEvent.VK_SHIFT);
 
 //            System.out.println(moveToBlock(49, 41, 10000));
             /*BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward();
@@ -237,10 +241,22 @@ public class Main {
         if (!moveToBlock(path.get(steps - 1)[0], path.get(steps - 1)[2], 10000)) return false;
         return true;
     }
+    static boolean moveToBlockFlatCombined(BlockPosWithDirection targetBPWD, int timeout) throws InterruptedException {
+
+
+        moveToBlockFlat(targetBPWD, 100000, 0.5);
+        robot.keyPress(KeyEvent.VK_SHIFT);
+        moveToBlockFlat(targetBPWD, 100000, 0.2);
+        robot.keyRelease(KeyEvent.VK_SHIFT);
+
+        TimeUnit.MILLISECONDS.sleep(50);
+        return true;
+    }
 
     static boolean moveToBlockFlat(BlockPosWithDirection targetBPWD, int timeout, double accuracy) throws InterruptedException {
 
 
+        //todo add timeout timing out
         String debug = getDebug(getGameScreen());
 
         Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
