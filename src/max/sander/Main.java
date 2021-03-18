@@ -89,6 +89,7 @@ public class Main {
         double[] pos;
         try {
 
+            if (false) throw new DebugTextIncompleteException("whatever"); // this is here to keep the catch even if i'm not using anything that generates this exception
             robot = new Robot();
 
             initMap();
@@ -112,8 +113,26 @@ public class Main {
             debug = getDebug(getGameScreen());
 
 //            mineVeinTunnelLevel();
-            BlockPosWithDirection testBPWD = new BlockPosWithDirection(35, 56, 31, 0);
-            System.out.println(moveToBlockDown(testBPWD, Timeout.newTimeout(5000)));
+//            BlockPosWithDirection testBPWD = new BlockPosWithDirection(35, 56, 31, 0);
+//            System.out.println(moveToBlockUp(testBPWD, Timeout.newTimeout(10000)));
+
+
+            /*BlockPosWithDirection p1 = new BlockPosWithDirection(44, 59, 16, 0);
+            BlockPosWithDirection p2 = new BlockPosWithDirection(45, 58, 16, 0);
+            BlockPosWithDirection p3 = new BlockPosWithDirection(48, 59, 16, 0);
+            BlockPosWithDirection p4 = new BlockPosWithDirection(48, 59, 12, 0);
+            BlockPosWithDirection p5 = new BlockPosWithDirection(47, 60, 12, 0);
+            BlockPosWithDirection p6 = new BlockPosWithDirection(44, 59, 12, 0);
+            while (true) {
+                pointAtPos(p1);
+                System.out.println(moveToBlockFlatCombined(p1, Timeout.newTimeout(10000)));
+                System.out.println(moveToBlockDown(p2, Timeout.newTimeout(10000)));
+                System.out.println(moveToBlockUp(p3, Timeout.newTimeout(10000)));
+                pointAtPos(p4);
+                System.out.println(moveToBlockFlatCombined(p4, Timeout.newTimeout(10000)));
+                System.out.println(moveToBlockUp(p5, Timeout.newTimeout(10000)));
+                System.out.println(moveToBlockDown(p6, Timeout.newTimeout(10000)));
+            }*/
 
 
 
@@ -141,7 +160,7 @@ public class Main {
 
 
 
-            if (false) throw new DebugTextIncompleteException("whatever"); // this is here to keep the catch even if i'm not using anything that generates this exception
+
 
         } catch (DebugTextIncompleteException e) {
             if (!debuggingMode) {
@@ -214,7 +233,45 @@ public class Main {
 
     }
 
+    static boolean moveToBlockUp(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException, HowDidThisHappenException {
+        // targetBPWD/target must be one block down from the floor (floor not floored) of the current position, with optimally the step being immediately in front of it.
 
+        // this will not be checked.
+
+        String debug;
+        double[] playerPosFloored;
+
+        pointAtPos(targetBPWD);
+
+        if (!moveToBlockFlat(targetBPWD, timeoutID, 1)) return false;
+        TimeUnit.MILLISECONDS.sleep(150);
+        debug = getDebug(getGameScreen());
+        playerPosFloored = getPlayerPosFloored(debug);
+        while (playerPosFloored[1] != targetBPWD.getY() + 1) {
+            if (Timeout.hasExpired(timeoutID)) {
+                return false;
+            }
+            pointAtPos(targetBPWD);
+            robot.keyPress(KeyEvent.VK_SPACE);
+            TimeUnit.MILLISECONDS.sleep(30);
+            robot.keyRelease(KeyEvent.VK_SPACE);
+            robot.keyPress(KeyEvent.VK_W);
+            TimeUnit.MILLISECONDS.sleep(180);
+            robot.keyRelease(KeyEvent.VK_W);
+            TimeUnit.MILLISECONDS.sleep(200);
+            debug = getDebug(getGameScreen());
+            playerPosFloored = getPlayerPosFloored(debug);
+        }
+
+        robot.keyPress(KeyEvent.VK_SHIFT);
+        moveToBlockFlat(targetBPWD, timeoutID, 0.2);
+        robot.keyRelease(KeyEvent.VK_SHIFT);
+
+        TimeUnit.MILLISECONDS.sleep(50);
+
+
+        return true;
+    }
 
     static boolean moveToBlockDown(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException, HowDidThisHappenException {
         // targetBPWD/target must be one block down from the floor (floor not floored) of the current position, with optimally the step being immediately in front of it.
@@ -266,7 +323,7 @@ public class Main {
     }
     static boolean moveToBlockFlatCombined(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException {
 
-        moveToBlockFlat(targetBPWD, timeoutID, 0.5);
+        moveToBlockFlat(targetBPWD, timeoutID, 0.8);
         robot.keyPress(KeyEvent.VK_SHIFT);
         moveToBlockFlat(targetBPWD, timeoutID, 0.2);
         robot.keyRelease(KeyEvent.VK_SHIFT);
