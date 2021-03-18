@@ -142,14 +142,7 @@ public class VeinMinerTreeElement {
         return steps;
     }
 
-    /*
-     * done
-     *  getNextOre zu einer breitensuche umbauen
-     *  hashSet für visited erstellen
-     *  queue die von suchelement aus nach oben und unten sucht, richtung mit in queue packen
-     *  wenn richtung blätter dann kinder in die queue
-     *  wenn richtung wurzel dann kinder die nicht visited sind und parent in die queue
-     * */
+
     public VeinMinerTreeElement getNextOre() throws HowDidThisHappenException {
         // i'm just gonna believe this works till proven otherwise
         VeinMinerTreeElement currentClosestOre = null;

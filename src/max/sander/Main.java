@@ -115,6 +115,12 @@ public class Main {
 //            mineVeinTunnelLevel();
 //            BlockPosWithDirection testBPWD = new BlockPosWithDirection(35, 56, 31, 0);
 //            System.out.println(moveToBlockUp(testBPWD, Timeout.newTimeout(10000)));
+            BlockPosWithDirection p4 = new BlockPosWithDirection(48, 59, 12, 0);
+            BlockPosWithDirection gdsssd = new BlockPosWithDirection(48, 59, 12, 1);
+            ArrayList<BlockPosWithDirection> asd = new ArrayList<>();
+            asd.add(p4);
+            System.out.println(asd.contains(gdsssd));
+
 
 
             /*BlockPosWithDirection p1 = new BlockPosWithDirection(44, 59, 16, 0);
@@ -272,6 +278,46 @@ public class Main {
 
         return true;
     }
+
+    static ArrayList<BlockPosWithDirection> get3dPath(ArrayList<BlockPosWithDirection> floorPlan, BlockPosWithDirection start, BlockPosWithDirection target) throws HowDidThisHappenException {
+        if(!floorPlan.contains(start) || !floorPlan.contains(target)) throw new HowDidThisHappenException("start and target were not both on the pathfinding floorplan");
+        //if the floorplan is flawed weird things will probably happen
+
+        ArrayList<BlockPosWithDirection> out = new ArrayList<>();
+        return out;
+    }
+    static ArrayList<BlockPosWithDirection> TranslateDoubleArrayArrayListToBlockPosWithDirectionArrayList(ArrayList<double[]> in) {
+        ArrayList<BlockPosWithDirection> out = new ArrayList<>();
+        for (double[] element : in) {
+            out.add(new BlockPosWithDirection(element, 0));
+        }
+        return out;
+    }
+
+    static ArrayList<BlockPosWithDirection> simplify3dPath(ArrayList<BlockPosWithDirection> path) {
+        int steps = path.size();
+        if (steps <= 2) return path;
+
+        while (true) {
+            boolean foundSomething = false;
+            for (int i = 0; i < steps - 2; i++) {
+                if (path.get(i).getX() == path.get(i + 1).getX() && path.get(i).getX() == path.get(i + 2).getX() && path.get(i).getY() == path.get(i + 1).getY() && path.get(i).getY() == path.get(i + 2).getY()) {
+                    path.remove(i+1);
+                    foundSomething = true;
+                    break;
+                }
+                if (path.get(i).getZ() == path.get(i + 1).getZ() && path.get(i).getZ() == path.get(i + 2).getZ() && path.get(i).getY() == path.get(i + 1).getY() && path.get(i).getY() == path.get(i + 2).getY()) {
+                    path.remove(i+1);
+                    foundSomething = true;
+                    break;
+                }
+            }
+            steps = path.size();
+            if (!foundSomething) break;
+        }
+        return path;
+    }
+    
 
     static boolean moveToBlockDown(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException, HowDidThisHappenException {
         // targetBPWD/target must be one block down from the floor (floor not floored) of the current position, with optimally the step being immediately in front of it.

@@ -1,5 +1,7 @@
 package max.sander;
 
+import java.util.Objects;
+
 public class BlockPosWithDirection {
     double x;
     double y;
@@ -121,6 +123,19 @@ public class BlockPosWithDirection {
                 ", z=" + z +
                 ", direction=" + direction +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BlockPosWithDirection that = (BlockPosWithDirection) o;
+        return Double.compare(that.getX(), getX()) == 0 && Double.compare(that.getY(), getY()) == 0 && Double.compare(that.getZ(), getZ()) == 0/* && getDirection() == that.getDirection()*/;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getX(), getY(), getZ()/*, getDirection()*/);
     }
 
     public double getX() {
