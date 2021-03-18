@@ -1,9 +1,6 @@
 package max.sander;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 public class VeinMinerTreeElement {
     static VeinMinerTreeElement root;
@@ -44,11 +41,9 @@ public class VeinMinerTreeElement {
         checkBlockedDuplicates();
     }
     static void clearTree() {
-        for (VeinMinerTreeElement element : allElements) {
-            element.delete();
+        while (allElements.size() != 0) {
+            allElements.remove(0).delete();
         }
-        allElements.clear();
-        //todo test if this it creates an exception;
     }
     static boolean isCleared() {
         boolean clear = true;
@@ -59,6 +54,26 @@ public class VeinMinerTreeElement {
             }
         }
         return clear;
+    }
+    static ArrayList<double[]> toFloorPlanArrayList() {
+        //puts all "mined" elements into an arraylist as a doublearray
+        ArrayList<double[]> out = new ArrayList<>();
+        for (VeinMinerTreeElement element : allElements) {
+            if (element.type.equals("mined")) {
+                double[] newPos = element.positionToDoubleArray();
+                boolean alreadyThere = false;
+                for (double[] i : out) {
+                    if (Arrays.equals(i, newPos)) {
+                        alreadyThere = true;
+                        break;
+                    }
+                }
+                if (!alreadyThere) {
+                    out.add(newPos);
+                }
+            }
+        }
+        return out;
     }
     public void removeUnminedDuplicates() { // will set them to mined instead
         ArrayList<VeinMinerTreeElement> loopList = allElements;

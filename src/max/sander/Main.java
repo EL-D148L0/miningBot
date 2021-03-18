@@ -111,9 +111,10 @@ public class Main {
 
             debug = getDebug(getGameScreen());
 
-            mineVeinTunnelLevel();
-//            BlockPosWithDirection testBPWD = new BlockPosWithDirection(49, 57, 41, 0);
-//            moveToBlockFlatCombined(testBPWD, Timeout.newTimeout(5000));
+//            mineVeinTunnelLevel();
+            BlockPosWithDirection testBPWD = new BlockPosWithDirection(35, 56, 31, 0);
+            System.out.println(moveToBlockDown(testBPWD, Timeout.newTimeout(5000)));
+
 
 
 //            System.out.println(moveToBlock(49, 41, 10000));
@@ -213,18 +214,44 @@ public class Main {
 
     }
 
-    static boolean followFlatPathOld(ArrayList<double[]> path) throws InterruptedException {
-        simplifyFlatPath(path);
-        int steps = path.size();
-        if (steps == 0) return true;
-        // ignores first step
-        for (int i = 1; i < steps - 1; i++) {
-            if (!moveToBlock(path.get(i)[0], path.get(i)[2], 10000)) return false;
+
+
+    static boolean moveToBlockDown(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException, HowDidThisHappenException {
+        // targetBPWD/target must be one block down from the floor (floor not floored) of the current position, with optimally the step being immediately in front of it.
+
+        // this will not be checked.
+        String debug;
+        double[] playerPosFloored;
+
+        pointAtPos(targetBPWD);
+
+        if (!moveToBlockFlat(targetBPWD, timeoutID, 1)) return false;
+        TimeUnit.MILLISECONDS.sleep(150);
+        debug = getDebug(getGameScreen());
+        playerPosFloored = getPlayerPosFloored(debug);
+        while (playerPosFloored[1] != targetBPWD.getY() + 1) {
+            if (Timeout.hasExpired(timeoutID)) {
+                return false;
+            }
+            pointAtPos(targetBPWD);
+            robot.keyPress(KeyEvent.VK_W);
+            TimeUnit.MILLISECONDS.sleep(30);
+            robot.keyRelease(KeyEvent.VK_W);
+            TimeUnit.MILLISECONDS.sleep(150);
+            debug = getDebug(getGameScreen());
+            playerPosFloored = getPlayerPosFloored(debug);
         }
-        if (!moveToBlock(path.get(steps - 1)[0], path.get(steps - 1)[2], 10000)) return false;
-        //fixme this one isn't working all that great
+
+        robot.keyPress(KeyEvent.VK_SHIFT);
+        moveToBlockFlat(targetBPWD, timeoutID, 0.2);
+        robot.keyRelease(KeyEvent.VK_SHIFT);
+
+        TimeUnit.MILLISECONDS.sleep(50);
+
         return true;
     }
+
+
     static boolean followFlatPath(ArrayList<double[]> path) throws InterruptedException {
         //well now it works but it looks like a confused chicken
         simplifyFlatPath(path);
