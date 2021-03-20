@@ -55,15 +55,28 @@ public class VeinMinerTreeElement {
         }
         return clear;
     }
-    static ArrayList<double[]> toFloorPlanArrayList() {
+    static ArrayList<BlockPosWithHeight> toFloorPlanArrayList() {
         //puts all "mined" elements into an arraylist as a doublearray
-        ArrayList<double[]> out = new ArrayList<>();
+        ArrayList<BlockPosWithHeight> out = new ArrayList<>();
         for (VeinMinerTreeElement element : allElements) {
             if (element.type.equals("mined")) {
-                double[] newPos = element.positionToDoubleArray();
+                BlockPosWithHeight newPos = new BlockPosWithHeight(element.positionToDoubleArray(), 2);
                 boolean alreadyThere = false;
-                for (double[] i : out) {
-                    if (Arrays.equals(i, newPos)) {
+                for (BlockPosWithHeight i : out) {
+                    if (newPos.equals(i)) {
+                        alreadyThere = true;
+                        break;
+                    }
+                }
+                if (!alreadyThere) {
+                    out.add(newPos);
+                }
+            }
+            if (element.type.equals("stairs")) {
+                BlockPosWithHeight newPos = new BlockPosWithHeight(element.positionToDoubleArray(), 3);
+                boolean alreadyThere = false;
+                for (BlockPosWithHeight i : out) {
+                    if (newPos.equals(i)) {
                         alreadyThere = true;
                         break;
                     }

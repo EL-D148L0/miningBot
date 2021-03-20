@@ -4,13 +4,12 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.*;
 
@@ -279,11 +278,31 @@ public class Main {
         return true;
     }
 
-    static ArrayList<BlockPosWithDirection> get3dPath(ArrayList<BlockPosWithDirection> floorPlan, BlockPosWithDirection start, BlockPosWithDirection target) throws HowDidThisHappenException {
-        if(!floorPlan.contains(start) || !floorPlan.contains(target)) throw new HowDidThisHappenException("start and target were not both on the pathfinding floorplan");
+    static ArrayList<BlockPosWithHeight> get3dPath(ArrayList<BlockPosWithHeight> floorPlan, BlockPosWithHeight start, BlockPosWithHeight target) throws HowDidThisHappenException {
+        //if(!floorPlan.contains(start) || !floorPlan.contains(target)) throw new HowDidThisHappenException("start and target were not both on the pathfinding floorplan");
+        double[] startDoubleArray = start.toDoubleArray();
+        double[] targetDoubleArray = target.toDoubleArray();
+        boolean startInPlan = false;
+        boolean targetInPlan = false;
+        for (BlockPosWithHeight i : floorPlan) {
+            if (i.equalsDoubleArray(startDoubleArray)) startInPlan = true;
+            if (i.equalsDoubleArray(targetDoubleArray)) targetInPlan = true;
+        }
+        if (!(startInPlan && targetInPlan)) throw new HowDidThisHappenException("start and target were not both on the pathfinding floorplan");
         //if the floorplan is flawed weird things will probably happen
 
-        ArrayList<BlockPosWithDirection> out = new ArrayList<>();
+        Queue<BlockPosWithHeight> queue = new LinkedList<>();
+        HashSet<BlockPosWithHeight> visited = new HashSet<BlockPosWithHeight>();
+        queue.add(start);
+        while (queue.size() > 0) {
+            BlockPosWithHeight currentBPWH = queue.remove();
+            visited.add(start);
+
+        }
+
+        //need height;
+
+        ArrayList<BlockPosWithHeight> out = new ArrayList<>();
         return out;
     }
     static ArrayList<BlockPosWithDirection> TranslateDoubleArrayArrayListToBlockPosWithDirectionArrayList(ArrayList<double[]> in) {
@@ -293,8 +312,83 @@ public class Main {
         }
         return out;
     }
+    static ArrayList<BlockPosWithHeight> simplify3dPathDiagonals(ArrayList<BlockPosWithHeight> path, ArrayList<BlockPosWithHeight> floorPlan) {
+        // untested but i guess it'll work
+        ArrayList<BlockPosWithHeight> newPath = simplify3dPath(path);
+        int steps = newPath.size();
+        if (steps <= 2) return newPath;
+        // player is .6 blocks wide
+        double width = 0.6; //the passage width
 
-    static ArrayList<BlockPosWithDirection> simplify3dPath(ArrayList<BlockPosWithDirection> path) {
+        while (true) {
+            boolean foundSomething = false;
+            for (int i = 0; i < steps - 2; i++) {
+                if (newPath.get(i).getY() == newPath.get(i + 1).getY() && newPath.get(i).getY() == newPath.get(i + 2).getY()) {
+                    BlockPosWithHeight start = newPath.get(i);
+                    BlockPosWithHeight end = newPath.get(i + 2);
+                    double startX = start.getX();
+                    double startZ = start.getZ();
+                    double endX = end.getX();
+                    double endZ = end.getZ();
+                    Vector2D direction = new Vector2D(new double[] {startX, startZ}, new double[] {endX, endZ});
+                    Vector2D shiftDirection = new Vector2D(direction.getY(), -direction.getX()).unitVector();
+                    Vector2D startPoint = new Vector2D(startX + 0.5, startZ + 0.5);
+                    Vector2D endPoint = new Vector2D(endX + 0.5, endZ + 0.5);
+                    Vector2D startPointShift1 = startPoint.plus(shiftDirection.times(width/2));
+                    Vector2D endPointShift1 = endPoint.plus(shiftDirection.times(width/2));
+                    Vector2D startPointShift2 = startPoint.plus(shiftDirection.times(-width/2));
+                    Vector2D endPointShift2 = endPoint.plus(shiftDirection.times(-width/2));
+
+
+                    Line2D.Double firstLine = new Line2D.Double(startPointShift1.getX(), startPointShift1.getY(), endPointShift1.getX(), endPointShift1.getY());
+                    Line2D.Double secondLine = new Line2D.Double(startPointShift2.getX(), startPointShift2.getY(), endPointShift2.getX(), endPointShift2.getY());
+                    double smallX;
+                    double bigX;
+                    double smallZ;
+                    double bigZ;
+                    if (startX > endX) {
+                        bigX = startX;
+                        smallX = endX;
+                    } else {
+                        bigX = endX;
+                        smallX = startX;
+                    }
+                    if (startZ > endZ) {
+                        bigZ = startZ;
+                        smallZ = endZ;
+                    } else {
+                        bigZ = endZ;
+                        smallZ = startZ;
+                    }
+
+                    boolean pathExists = true;
+                    for (double x = smallX; x < bigX; x++) {
+                        for (double z = smallZ; z < bigZ; z++) {
+                            if (firstLine.intersects(x, z, 1, 1)) {
+                                boolean positionOnFloorPlan = false;
+                                for (BlockPosWithHeight pos : floorPlan) {
+                                    if (pos.getX() == x && pos.getZ() == z) {
+                                        positionOnFloorPlan = true;
+                                    }
+                                }
+                                if (!positionOnFloorPlan) pathExists = false;
+                            }
+                        }
+                    }
+                    if (pathExists) {
+                        foundSomething = true;
+                        break;
+                    }
+                }
+            }
+            steps = newPath.size();
+            if (!foundSomething) break;
+        }
+
+        return newPath;
+    }
+
+    static ArrayList<BlockPosWithHeight> simplify3dPath(ArrayList<BlockPosWithHeight> path) {
         int steps = path.size();
         if (steps <= 2) return path;
 
