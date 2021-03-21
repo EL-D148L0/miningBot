@@ -285,25 +285,183 @@ public class Main {
         boolean startInPlan = false;
         boolean targetInPlan = false;
         for (BlockPosWithHeight i : floorPlan) {
-            if (i.equalsDoubleArray(startDoubleArray)) startInPlan = true;
-            if (i.equalsDoubleArray(targetDoubleArray)) targetInPlan = true;
+            if (i.equalsDoubleArray(startDoubleArray)) {
+                start = i;
+                startInPlan = true;
+            }
+            if (i.equalsDoubleArray(targetDoubleArray)) {
+                target = i;
+                targetInPlan = true;
+            }
+
         }
         if (!(startInPlan && targetInPlan)) throw new HowDidThisHappenException("start and target were not both on the pathfinding floorplan");
         //if the floorplan is flawed weird things will probably happen
 
-        Queue<BlockPosWithHeight> queue = new LinkedList<>();
-        HashSet<BlockPosWithHeight> visited = new HashSet<BlockPosWithHeight>();
-        queue.add(start);
-        while (queue.size() > 0) {
-            BlockPosWithHeight currentBPWH = queue.remove();
-            visited.add(start);
 
+        ArrayList<ArrayList<BlockPosWithHeight>> pathList = new ArrayList<>();
+        ArrayList<BlockPosWithHeight> firstPath = new ArrayList<BlockPosWithHeight>();
+        firstPath.add(start);
+        pathList.add(firstPath);
+
+
+        while (true) {
+            boolean didSomething = false;
+            for (int i = 0; i < pathList.size(); i++) {
+                ArrayList<BlockPosWithHeight> currentPath = pathList.get(i);
+                BlockPosWithHeight lastElement = currentPath.get(currentPath.size() - 1);
+                if (lastElement.equals(target)) continue;
+                double[] lastElementDoubleArray = lastElement.toDoubleArray();
+                double[] dir1 = lastElementDoubleArray.clone();
+                dir1[0] += 1;
+                double[] dir2 = lastElementDoubleArray.clone();
+                dir2[0] -= 1;
+                double[] dir3 = lastElementDoubleArray.clone();
+                dir3[2] += 1;
+                double[] dir4 = lastElementDoubleArray.clone();
+                dir4[2] -= 1;
+                for (BlockPosWithHeight floorPlanElement : floorPlan) {
+                    if (currentPath.contains(floorPlanElement)) continue;
+                    // there's probably a fancy way to do this but i'm not looking it up
+                    if (floorPlanElement.getX() == dir1[0] && floorPlanElement.getX() == dir1[0]) {
+                        if (floorPlanElement.getY() == dir1[1]) {
+                            ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                            newPath.add(floorPlanElement);
+                            pathList.add(newPath);
+                            didSomething = true;
+                        }
+                        if (floorPlanElement.getY() == dir1[1] + 1) {
+                            if (lastElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                        if (floorPlanElement.getY() == dir1[1] - 1) {
+                            if (floorPlanElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                    }
+                    if (floorPlanElement.getX() == dir2[0] && floorPlanElement.getX() == dir2[0]) {
+                        if (floorPlanElement.getY() == dir2[1]) {
+                            ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                            newPath.add(floorPlanElement);
+                            pathList.add(newPath);
+                            didSomething = true;
+                        }
+                        if (floorPlanElement.getY() == dir2[1] + 1) {
+                            if (lastElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                        if (floorPlanElement.getY() == dir2[1] - 1) {
+                            if (floorPlanElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                    }
+                    if (floorPlanElement.getX() == dir3[0] && floorPlanElement.getX() == dir3[0]) {
+                        if (floorPlanElement.getY() == dir3[1]) {
+                            ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                            newPath.add(floorPlanElement);
+                            pathList.add(newPath);
+                            didSomething = true;
+                        }
+                        if (floorPlanElement.getY() == dir3[1] + 1) {
+                            if (lastElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                        if (floorPlanElement.getY() == dir3[1] - 1) {
+                            if (floorPlanElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                    }
+                    if (floorPlanElement.getX() == dir4[0] && floorPlanElement.getX() == dir4[0]) {
+                        if (floorPlanElement.getY() == dir4[1]) {
+                            ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                            newPath.add(floorPlanElement);
+                            pathList.add(newPath);
+                            didSomething = true;
+                        }
+                        if (floorPlanElement.getY() == dir4[1] + 1) {
+                            if (lastElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                        if (floorPlanElement.getY() == dir4[1] - 1) {
+                            if (floorPlanElement.getHeight() >= 3) {
+                                ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
+                                newPath.add(floorPlanElement);
+                                pathList.add(newPath);
+                                didSomething = true;
+                            }
+                        }
+                    }
+                }
+                pathList.remove(i);// removes path that is not leading to target and wasn't continued
+                didSomething = true;
+                break;
+
+
+            }
+
+            if (!didSomething) break;
+        }// now pathList should have only paths that lead to the target
+
+        ArrayList<ArrayList<BlockPosWithHeight>> newPathList = new ArrayList<>();
+
+        for (ArrayList<BlockPosWithHeight> currentPath : pathList) {
+            newPathList.add(simplify3dPathDiagonals(currentPath, floorPlan));
+        }
+        // now only simplified paths that lead to the target.
+
+        ArrayList<ArrayList<BlockPosWithHeight>> shortestPathList = new ArrayList<>();
+        int smallestSize = 2147483647;
+        for (ArrayList<BlockPosWithHeight> currentPath : newPathList) {
+            if (currentPath.size() < smallestSize) {
+                smallestSize = currentPath.size();
+            }
+        }
+        for (ArrayList<BlockPosWithHeight> currentPath : newPathList) {
+            if (currentPath.size() == smallestSize) {
+                shortestPathList.add(currentPath);
+            }
+        }
+        ArrayList<BlockPosWithHeight> currentShortestPath = null;
+        double shortestLength = 12000;//idk what to put here i could do a fancy thing and initialise it with the first value but this is easier
+        for (ArrayList<BlockPosWithHeight> currentPath : shortestPathList) {
+            if (pathLength(currentPath) < shortestLength) {
+                shortestLength = pathLength(currentPath);
+                currentShortestPath = currentPath;
+            }
         }
 
-        //need height;
 
-        ArrayList<BlockPosWithHeight> out = new ArrayList<>();
-        return out;
+
+
+        return currentShortestPath;
     }
     static ArrayList<BlockPosWithDirection> TranslateDoubleArrayArrayListToBlockPosWithDirectionArrayList(ArrayList<double[]> in) {
         ArrayList<BlockPosWithDirection> out = new ArrayList<>();
@@ -311,6 +469,22 @@ public class Main {
             out.add(new BlockPosWithDirection(element, 0));
         }
         return out;
+    }
+    static double pathLength(ArrayList<BlockPosWithHeight> path) {
+        int steps = path.size();
+        double length = 0;
+        for (int i = 0; i < steps - 1; i++) {
+            BlockPosWithHeight start = path.get(i);
+            BlockPosWithHeight end = path.get(i + 1);
+            double startX = start.getX();
+            double startZ = start.getZ();
+            double endX = end.getX();
+            double endZ = end.getZ();
+            Vector2D direction = new Vector2D(new double[] {startX, startZ}, new double[] {endX, endZ});
+            length += direction.length();
+
+        }
+        return length;
     }
     static ArrayList<BlockPosWithHeight> simplify3dPathDiagonals(ArrayList<BlockPosWithHeight> path, ArrayList<BlockPosWithHeight> floorPlan) {
         // untested but i guess it'll work
@@ -376,6 +550,7 @@ public class Main {
                         }
                     }
                     if (pathExists) {
+                        newPath.remove(i+1);
                         foundSomething = true;
                         break;
                     }
