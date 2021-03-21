@@ -115,6 +115,8 @@ public class Main {
 //            BlockPosWithDirection testBPWD = new BlockPosWithDirection(35, 56, 31, 0);
 //            System.out.println(moveToBlockUp(testBPWD, Timeout.newTimeout(10000)));
 
+
+
             ArrayList<BlockPosWithHeight> testFloorPlan = new ArrayList<>();
             double y = 56;
             for (double x = 72; x <= 75; x++) {
@@ -161,6 +163,47 @@ public class Main {
                 for (double z = 22; z <= 23; z++) {
                     testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
                 }
+            }
+
+            /*for (BlockPosWithHeight element : testFloorPlan) {
+                writeChat("/setblock " + (int) element.getX() + " " + (int) element.getY() + " " + (int) element.getZ() + " minecraft:iron_block");
+                TimeUnit.MILLISECONDS.sleep(200);
+            }*/
+
+
+            ArrayList<BlockPosWithHeight> testPath = new ArrayList<>();
+
+            testPath.add(new BlockPosWithHeight(75.0, 56.0, 14.0,2));
+            testPath.add(new BlockPosWithHeight(75.0, 56.0, 16.0,3));
+            testPath.add(new BlockPosWithHeight(75.0, 57.0, 16.0,2));
+            testPath.add(new BlockPosWithHeight(76.0, 57.0, 17.0,2));
+            //System.out.println(simplify3dPathDiagonals(testPath, testFloorPlan));
+
+
+
+
+            BlockPosWithHeight start = new BlockPosWithHeight(75, 56, 14, 2);
+            BlockPosWithHeight target = new BlockPosWithHeight(76.0, 57.0, 17.0,2);
+
+
+            /*ArrayList<BlockPosWithHeight> path = get3dPath(testFloorPlan, start, target);
+            System.out.println("calculated path");
+            System.out.println(path);*/
+
+            Random random = new Random();
+            while (true) {
+                int n = random.nextInt(testFloorPlan.size());
+                target = testFloorPlan.get(n);
+                writeChat("/setblock " + (int) target.getX() + " " + (int) target.getY() + " " + (int) target.getZ() + " minecraft:target");
+                TimeUnit.MILLISECONDS.sleep(200);
+                ArrayList<BlockPosWithHeight> path = get3dPath(testFloorPlan, start, target);
+                writeChat("calculated path");
+                System.out.println("calculated path");
+                System.out.println(path);
+                if (!follow3dPath(path)) break;
+                writeChat("/setblock " + (int) target.getX() + " " + (int) target.getY() + " " + (int) target.getZ() + " minecraft:iron_block");
+                TimeUnit.MILLISECONDS.sleep(200);
+                start = target;
             }
 
 
@@ -307,14 +350,22 @@ public class Main {
         ArrayList<BlockPosWithHeight> firstPath = new ArrayList<BlockPosWithHeight>();
         firstPath.add(start);
         pathList.add(firstPath);
+        System.out.println("before while loop");
 
+        int runs = 5;
+        while (true) {/*
+            if (runs >= 0) {
+                System.out.println("beginning while loop");
+                System.out.println(pathList);
+                runs--;
+            }*/
 
-        while (true) {
             boolean didSomething = false;
             for (int i = 0; i < pathList.size(); i++) {
                 ArrayList<BlockPosWithHeight> currentPath = pathList.get(i);
                 BlockPosWithHeight lastElement = currentPath.get(currentPath.size() - 1);
                 if (lastElement.equals(target)) continue;
+                if (i > 4) break; // after 4 paths stop
                 double[] lastElementDoubleArray = lastElement.toDoubleArray();
                 double[] dir1 = lastElementDoubleArray.clone();
                 dir1[0] += 1;
@@ -326,8 +377,9 @@ public class Main {
                 dir4[2] -= 1;
                 for (BlockPosWithHeight floorPlanElement : floorPlan) {
                     if (currentPath.contains(floorPlanElement)) continue;
+
                     // there's probably a fancy way to do this but i'm not looking it up
-                    if (floorPlanElement.getX() == dir1[0] && floorPlanElement.getX() == dir1[0]) {
+                    if (floorPlanElement.getX() == dir1[0] && floorPlanElement.getZ() == dir1[2]) {
                         if (floorPlanElement.getY() == dir1[1]) {
                             ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
                             newPath.add(floorPlanElement);
@@ -351,7 +403,7 @@ public class Main {
                             }
                         }
                     }
-                    if (floorPlanElement.getX() == dir2[0] && floorPlanElement.getX() == dir2[0]) {
+                    if (floorPlanElement.getX() == dir2[0] && floorPlanElement.getZ() == dir2[2]) {
                         if (floorPlanElement.getY() == dir2[1]) {
                             ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
                             newPath.add(floorPlanElement);
@@ -375,7 +427,7 @@ public class Main {
                             }
                         }
                     }
-                    if (floorPlanElement.getX() == dir3[0] && floorPlanElement.getX() == dir3[0]) {
+                    if (floorPlanElement.getX() == dir3[0] && floorPlanElement.getZ() == dir3[2]) {
                         if (floorPlanElement.getY() == dir3[1]) {
                             ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
                             newPath.add(floorPlanElement);
@@ -399,7 +451,7 @@ public class Main {
                             }
                         }
                     }
-                    if (floorPlanElement.getX() == dir4[0] && floorPlanElement.getX() == dir4[0]) {
+                    if (floorPlanElement.getX() == dir4[0] && floorPlanElement.getZ() == dir4[2]) {
                         if (floorPlanElement.getY() == dir4[1]) {
                             ArrayList<BlockPosWithHeight> newPath = (ArrayList<BlockPosWithHeight>) currentPath.clone();
                             newPath.add(floorPlanElement);
@@ -432,11 +484,22 @@ public class Main {
             }
 
             if (!didSomething) break;
-        }// now pathList should have only paths that lead to the target
+        }
+
+        ArrayList<ArrayList<BlockPosWithHeight>> newPathListOne = new ArrayList<>();
+
+        for (ArrayList<BlockPosWithHeight> currentPath : pathList) {
+            if (currentPath.contains(target)) {
+                newPathListOne.add(currentPath);
+            }
+        }
+
+
+        // now newPathListOne should have only paths that lead to the target
 
         ArrayList<ArrayList<BlockPosWithHeight>> newPathList = new ArrayList<>();
 
-        for (ArrayList<BlockPosWithHeight> currentPath : pathList) {
+        for (ArrayList<BlockPosWithHeight> currentPath : newPathListOne) {
             newPathList.add(simplify3dPathDiagonals(currentPath, floorPlan));
         }
         // now only simplified paths that lead to the target.
@@ -552,6 +615,16 @@ public class Main {
                                 }
                                 if (!positionOnFloorPlan) pathExists = false;
                             }
+
+                            if (secondLine.intersects(x, z, 1, 1)) {
+                                boolean positionOnFloorPlan = false;
+                                for (BlockPosWithHeight pos : floorPlan) {
+                                    if (pos.getX() == x && pos.getZ() == z) {
+                                        positionOnFloorPlan = true;
+                                    }
+                                }
+                                if (!positionOnFloorPlan) pathExists = false;
+                            }
                         }
                     }
                     if (pathExists) {
@@ -648,11 +721,11 @@ public class Main {
         // ignores first step
         for (int i = 1; i < steps; i++) {
             if (path.get(i).getY() == path.get(i-1).getY()) {
-                if (!moveToBlockFlatCombined(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
+                if (!moveToBlockFlatCombined(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(10000))) return false;
             } else if (path.get(i).getY() - 1 == path.get(i-1).getY()) {
-                if (!moveToBlockDown(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
+                if (!moveToBlockUp(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(10000))) return false;
             } else if (path.get(i).getY() == path.get(i-1).getY() - 1) {
-                if (!moveToBlockUp(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
+                if (!moveToBlockDown(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(10000))) return false;
             }
         }
         return true;
