@@ -114,54 +114,58 @@ public class Main {
 //            mineVeinTunnelLevel();
 //            BlockPosWithDirection testBPWD = new BlockPosWithDirection(35, 56, 31, 0);
 //            System.out.println(moveToBlockUp(testBPWD, Timeout.newTimeout(10000)));
-            BlockPosWithDirection p4 = new BlockPosWithDirection(48, 59, 12, 0);
-            BlockPosWithDirection gdsssd = new BlockPosWithDirection(48, 59, 12, 1);
-            ArrayList<BlockPosWithDirection> asd = new ArrayList<>();
-            asd.add(p4);
-            System.out.println(asd.contains(gdsssd));
+
+            ArrayList<BlockPosWithHeight> testFloorPlan = new ArrayList<>();
+            double y = 56;
+            for (double x = 72; x <= 75; x++) {
+                for (double z = 14; z <= 14; z++) {
+                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
+                }
+            }
+            for (double x = 74; x <= 75; x++) {
+                for (double z = 15; z <= 15; z++) {
+                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
+                }
+            }
+            for (double x = 73; x <= 74; x++) {
+                for (double z = 16; z <= 17; z++) {
+                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
+                }
+            }
+            testFloorPlan.add(new BlockPosWithHeight(75, y, 17, 2));
+            testFloorPlan.add(new BlockPosWithHeight(75, y, 16, 3));
+            testFloorPlan.add(new BlockPosWithHeight(73, y, 15, 3));
+            y = 57;
+            testFloorPlan.add(new BlockPosWithHeight(76, y, 18, 3));
+            testFloorPlan.add(new BlockPosWithHeight(72, y, 15, 3));
+            testFloorPlan.add(new BlockPosWithHeight(76, y, 17, 2));
+            testFloorPlan.add(new BlockPosWithHeight(76, y, 16, 2));
+            y = 58;
+
+            for (double x = 71; x <= 72; x++) {
+                for (double z = 17; z <= 19; z++) {
+                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
+                }
+            }
+            for (double x = 73; x <= 76; x++) {
+                for (double z = 19; z <= 19; z++) {
+                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
+                }
+            }
+            testFloorPlan.add(new BlockPosWithHeight(73, y, 18, 2));
+            testFloorPlan.add(new BlockPosWithHeight(72, y, 16, 2));
+            testFloorPlan.add(new BlockPosWithHeight(71, y, 20, 3));
+            y = 59;
+            testFloorPlan.add(new BlockPosWithHeight(71, y, 21, 2));
+            for (double x = 71; x <= 74; x++) {
+                for (double z = 22; z <= 23; z++) {
+                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
+                }
+            }
 
 
 
-            /*BlockPosWithDirection p1 = new BlockPosWithDirection(44, 59, 16, 0);
-            BlockPosWithDirection p2 = new BlockPosWithDirection(45, 58, 16, 0);
-            BlockPosWithDirection p3 = new BlockPosWithDirection(48, 59, 16, 0);
-            BlockPosWithDirection p4 = new BlockPosWithDirection(48, 59, 12, 0);
-            BlockPosWithDirection p5 = new BlockPosWithDirection(47, 60, 12, 0);
-            BlockPosWithDirection p6 = new BlockPosWithDirection(44, 59, 12, 0);
-            while (true) {
-                pointAtPos(p1);
-                System.out.println(moveToBlockFlatCombined(p1, Timeout.newTimeout(10000)));
-                System.out.println(moveToBlockDown(p2, Timeout.newTimeout(10000)));
-                System.out.println(moveToBlockUp(p3, Timeout.newTimeout(10000)));
-                pointAtPos(p4);
-                System.out.println(moveToBlockFlatCombined(p4, Timeout.newTimeout(10000)));
-                System.out.println(moveToBlockUp(p5, Timeout.newTimeout(10000)));
-                System.out.println(moveToBlockDown(p6, Timeout.newTimeout(10000)));
-            }*/
 
-
-
-//            System.out.println(moveToBlock(49, 41, 10000));
-            /*BlockPosWithDirection bp1 = new BlockPosWithDirection(debug).forward();
-            moveToBlockRough(bp1.getX(), bp1.getZ(), 2000);*/
-            /*pointAtSide(bp1.down(0.5));
-            TimeUnit.MILLISECONDS.sleep(800);
-            pointAtSide(bp1.forward(0.5));
-            TimeUnit.MILLISECONDS.sleep(800);
-            pointAtSide(bp1.right(0.5));
-            TimeUnit.MILLISECONDS.sleep(800);
-            pointAtSide(bp1.forward(0.5).up());
-            
-            TimeUnit.MILLISECONDS.sleep(2000);
-
-
-            pointAtPos(bp1.down(0.5));
-            TimeUnit.MILLISECONDS.sleep(800);
-            pointAtPos(bp1.forward(0.5));
-            TimeUnit.MILLISECONDS.sleep(800);
-            pointAtPos(bp1.right(0.5));
-            TimeUnit.MILLISECONDS.sleep(800);
-            pointAtPos(bp1.forward(0.5).up());*/
 
 
 
