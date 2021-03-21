@@ -470,6 +470,7 @@ public class Main {
         }
         return out;
     }
+
     static double pathLength(ArrayList<BlockPosWithHeight> path) {
         int steps = path.size();
         double length = 0;
@@ -634,6 +635,22 @@ public class Main {
             if (!moveToBlockFlatCombined(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
         }
         if (!moveToBlockFlatCombined(new BlockPosWithDirection(path.get(steps - 1), 0), Timeout.newTimeout(5000))) return false;
+        return true;
+    }
+    static boolean follow3dPath(ArrayList<BlockPosWithHeight> path) throws InterruptedException, HowDidThisHappenException {
+        //well now it works but it looks like a confused chicken
+        int steps = path.size();
+        if (steps == 0) return true;
+        // ignores first step
+        for (int i = 1; i < steps; i++) {
+            if (path.get(i).getY() == path.get(i-1).getY()) {
+                if (!moveToBlockFlatCombined(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
+            } else if (path.get(i).getY() - 1 == path.get(i-1).getY()) {
+                if (!moveToBlockDown(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
+            } else if (path.get(i).getY() == path.get(i-1).getY() - 1) {
+                if (!moveToBlockUp(new BlockPosWithDirection(path.get(i), 0), Timeout.newTimeout(5000))) return false;
+            }
+        }
         return true;
     }
     static boolean moveToBlockFlatCombined(BlockPosWithDirection targetBPWD, int timeoutID) throws InterruptedException {
