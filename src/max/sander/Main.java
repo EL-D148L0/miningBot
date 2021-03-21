@@ -365,7 +365,7 @@ public class Main {
                 ArrayList<BlockPosWithHeight> currentPath = pathList.get(i);
                 BlockPosWithHeight lastElement = currentPath.get(currentPath.size() - 1);
                 if (lastElement.equals(target)) continue;
-                if (i > 4) break; // after 4 paths stop
+                //if (i > 4) break; // after 4 paths stop
                 double[] lastElementDoubleArray = lastElement.toDoubleArray();
                 double[] dir1 = lastElementDoubleArray.clone();
                 dir1[0] += 1;
