@@ -13,13 +13,13 @@ public class BlockPosWithDirection {
         this.y = playerPos[1];
         this.z = playerPos[2];
         if (debug.contains("positive X")) {
-            direction = 0; //todo konstanten einführen
+            direction = Constants.POSITIVE_X;
         } else if (debug.contains("negative X")) {
-            direction = 1;
+            direction = Constants.NEGATIVE_X;
         } else if (debug.contains("positive Z")) {
-            direction = 2;
+            direction = Constants.POSITIVE_Z;
         } else if (debug.contains("negative Z")) {
-            direction = 3;
+            direction = Constants.NEGATIVE_Z;
         }
     }
     public BlockPosWithDirection(double x, double y, double z, int dir) {

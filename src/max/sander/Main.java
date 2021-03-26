@@ -76,7 +76,6 @@ public class Main {
      - add the function that respond to mobs with the procedure described in a comment below.
      - vein mining functions
      - redo the scan functions using the new pointAtPos function
-     - fix movement functions
      - idea: make a faster pointat function that calculates if it should be able to see the target at the current heading so it doesn't spend much time swiveling  --> done i guess
 
     */
@@ -116,98 +115,23 @@ public class Main {
 //            System.out.println(moveToBlockUp(testBPWD, Timeout.newTimeout(10000)));
 
 
-
-            ArrayList<BlockPosWithHeight> testFloorPlan = new ArrayList<>();
-            double y = 56;
-            for (double x = 72; x <= 75; x++) {
-                for (double z = 14; z <= 14; z++) {
-                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
-                }
-            }
-            for (double x = 74; x <= 75; x++) {
-                for (double z = 15; z <= 15; z++) {
-                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
-                }
-            }
-            for (double x = 73; x <= 74; x++) {
-                for (double z = 16; z <= 17; z++) {
-                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
-                }
-            }
-            testFloorPlan.add(new BlockPosWithHeight(75, y, 17, 2));
-            testFloorPlan.add(new BlockPosWithHeight(75, y, 16, 3));
-            testFloorPlan.add(new BlockPosWithHeight(73, y, 15, 3));
-            y = 57;
-            testFloorPlan.add(new BlockPosWithHeight(76, y, 18, 3));
-            testFloorPlan.add(new BlockPosWithHeight(72, y, 15, 3));
-            testFloorPlan.add(new BlockPosWithHeight(76, y, 17, 2));
-            testFloorPlan.add(new BlockPosWithHeight(76, y, 16, 2));
-            y = 58;
-
-            for (double x = 71; x <= 72; x++) {
-                for (double z = 17; z <= 19; z++) {
-                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
-                }
-            }
-            for (double x = 73; x <= 76; x++) {
-                for (double z = 19; z <= 19; z++) {
-                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
-                }
-            }
-            testFloorPlan.add(new BlockPosWithHeight(73, y, 18, 2));
-            testFloorPlan.add(new BlockPosWithHeight(72, y, 16, 2));
-            testFloorPlan.add(new BlockPosWithHeight(71, y, 20, 3));
-            y = 59;
-            testFloorPlan.add(new BlockPosWithHeight(71, y, 21, 2));
-            for (double x = 71; x <= 74; x++) {
-                for (double z = 22; z <= 23; z++) {
-                    testFloorPlan.add(new BlockPosWithHeight(x, y, z, 2));
-                }
-            }
-
-            /*for (BlockPosWithHeight element : testFloorPlan) {
-                writeChat("/setblock " + (int) element.getX() + " " + (int) element.getY() + " " + (int) element.getZ() + " minecraft:iron_block");
-                TimeUnit.MILLISECONDS.sleep(200);
-            }*/
+            ArrayList<BlockPos> seenBlocks = new ArrayList<>();
+            ArrayList<BlockPos> oreBlocks = new ArrayList<>();
+            ArrayList<BlockPos> minedBlocks = new ArrayList<>();
+            ArrayList<BlockPos> hazardBlockingBlocks = new ArrayList<>();
+            seenBlocks.addAll(generateBlockPosArrayList(46, 56, 87, 50, 57, 87));
+            seenBlocks.addAll(generateBlockPosArrayList(46, 56, 85, 50, 57, 85));
+            minedBlocks.addAll(generateBlockPosArrayList(46, 56, 86, 50, 57, 86));
+            seenBlocks.addAll(generateBlockPosArrayList(46, 55, 86, 50, 55, 86));
+            seenBlocks.addAll(generateBlockPosArrayList(46, 58, 86, 50, 58, 86));
+            seenBlocks.addAll(generateBlockPosArrayList(51, 56, 86, 51, 57, 86));
+            oreBlocks.addAll(generateBlockPosArrayList(50, 56, 87, 50, 57, 87));
 
 
-            ArrayList<BlockPosWithHeight> testPath = new ArrayList<>();
+            Vein vein = new Vein(seenBlocks, oreBlocks, minedBlocks, hazardBlockingBlocks);
+            vein.mine();
 
-            testPath.add(new BlockPosWithHeight(75.0, 56.0, 14.0,2));
-            testPath.add(new BlockPosWithHeight(75.0, 56.0, 16.0,3));
-            testPath.add(new BlockPosWithHeight(75.0, 57.0, 16.0,2));
-            testPath.add(new BlockPosWithHeight(76.0, 57.0, 17.0,2));
-            //System.out.println(simplify3dPathDiagonals(testPath, testFloorPlan));
-
-
-
-
-            BlockPosWithHeight start = new BlockPosWithHeight(75, 56, 14, 2);
-            BlockPosWithHeight target = new BlockPosWithHeight(76.0, 57.0, 17.0,2);
-
-
-            /*ArrayList<BlockPosWithHeight> path = get3dPath(testFloorPlan, start, target);
-            System.out.println("calculated path");
-            System.out.println(path);*/
-
-            Random random = new Random();
-            while (true) {
-                int n = random.nextInt(testFloorPlan.size());
-                target = testFloorPlan.get(n);
-                writeChat("/setblock " + (int) target.getX() + " " + (int) target.getY() + " " + (int) target.getZ() + " minecraft:target");
-                TimeUnit.MILLISECONDS.sleep(200);
-                ArrayList<BlockPosWithHeight> path = get3dPath(testFloorPlan, start, target);
-                writeChat("calculated path");
-                System.out.println("calculated path");
-                System.out.println(path);
-                if (!follow3dPath(path)) break;
-                writeChat("/setblock " + (int) target.getX() + " " + (int) target.getY() + " " + (int) target.getZ() + " minecraft:iron_block");
-                TimeUnit.MILLISECONDS.sleep(200);
-                start = target;
-            }
-
-
-
+            
 
 
 
@@ -230,6 +154,45 @@ public class Main {
             System.out.println("Main finally exit");
             endProgram();
         }
+    }
+    static ArrayList<BlockPos> generateBlockPosArrayList(int x1, int y1, int z1, int x2, int y2, int z2) {
+        ArrayList<BlockPos> out = new ArrayList<>();
+
+        int smallX;
+        int bigX;
+        int smallZ;
+        int bigZ;
+        int smallY;
+        int bigY;
+        if (x1 > x2) {
+            bigX = x1;
+            smallX = x2;
+        } else {
+            bigX = x2;
+            smallX = x1;
+        }
+        if (y1 > y2) {
+            bigY = y1;
+            smallY = y2;
+        } else {
+            bigY = y2;
+            smallY = y1;
+        }
+        if (z1 > z2) {
+            bigZ = z1;
+            smallZ = z2;
+        } else {
+            bigZ = z2;
+            smallZ = z1;
+        }
+        for (int x = smallX; x <= bigX; x++) {
+            for (int y = smallY; y <= bigY; y++) {
+                for (int z = smallZ; z <= bigZ; z++) {
+                    out.add(new BlockPos(x, y, z));
+                }
+            }
+        }
+        return out;
     }
     static BlockPosWithHeight getCurrentBPWH(ArrayList<BlockPosWithHeight> floorPlan, String debug) throws HowDidThisHappenException {
         BlockPosWithHeight currentBPWH = null;
