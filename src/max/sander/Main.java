@@ -231,6 +231,19 @@ public class Main {
             endProgram();
         }
     }
+    static BlockPosWithHeight getCurrentBPWH(ArrayList<BlockPosWithHeight> floorPlan, String debug) throws HowDidThisHappenException {
+        BlockPosWithHeight currentBPWH = null;
+        double[] playerPosFloored = getPlayerPosFloored(debug);
+        playerPosFloored[1] -= 1;
+        for (BlockPosWithHeight i : floorPlan) {
+            if (i.equalsDoubleArray(playerPosFloored)) {
+                currentBPWH = i;
+            }
+        }
+        if (currentBPWH == null) throw new HowDidThisHappenException("player is outside of floorplan");
+        return currentBPWH;
+    }
+
     static String mineVeinTunnelLevel() throws InterruptedException, DebugTextIncompleteException, HowDidThisHappenException, UnexpectedGameBehaviourException {
         /* call this facing the wall that contains ore
         * this should mine all the ore of the vein that is on the same level as the tunnel and return to the location where it was called returning "done".

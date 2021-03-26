@@ -35,6 +35,12 @@ public class BlockPosWithDirection {
         this.z = pos.getZ();
         this.direction = dir;
     }
+    public BlockPosWithDirection(BlockPos pos, int dir) {
+        this.x = pos.getX();
+        this.y = pos.getY();
+        this.z = pos.getZ();
+        this.direction = dir;
+    }
 
     public BlockPosWithDirection(double[] pos, int dir) {
         this.x = pos[0];

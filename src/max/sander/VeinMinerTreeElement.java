@@ -10,6 +10,8 @@ public class VeinMinerTreeElement {
     double x;
     double y; // level of the floor that is shown when the player stand on it
     double z;
+    boolean roofOre;
+    boolean floorOre; //only used on tunnel level
     String type; //options: ore, stairs, mined, blocked
     public VeinMinerTreeElement(double x, double y, double z) {
         this.x = x;
@@ -60,7 +62,7 @@ public class VeinMinerTreeElement {
         ArrayList<BlockPosWithHeight> out = new ArrayList<>();
         for (VeinMinerTreeElement element : allElements) {
             if (element.type.equals("mined")) {
-                BlockPosWithHeight newPos = new BlockPosWithHeight(element.positionToDoubleArray(), 2);
+                BlockPosWithHeight newPos = new BlockPosWithHeight(element.getX(), element.getY() - 1, element.getZ(), 2);
                 boolean alreadyThere = false;
                 for (BlockPosWithHeight i : out) {
                     if (newPos.equals(i)) {
@@ -73,7 +75,7 @@ public class VeinMinerTreeElement {
                 }
             }
             if (element.type.equals("stairs")) {
-                BlockPosWithHeight newPos = new BlockPosWithHeight(element.positionToDoubleArray(), 3);
+                BlockPosWithHeight newPos = new BlockPosWithHeight(element.getX(), element.getY() - 1, element.getZ(), 3);
                 boolean alreadyThere = false;
                 for (BlockPosWithHeight i : out) {
                     if (newPos.equals(i)) {

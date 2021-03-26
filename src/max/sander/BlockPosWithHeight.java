@@ -20,6 +20,37 @@ public class BlockPosWithHeight {
         this.z = pos[2];
         this.height = height;
     }
+    public BlockPosWithHeight(BlockPosWithDirection pos, int height) {
+        this.x = pos.getX();
+        this.y = pos.getY();
+        this.z = pos.getZ();
+        this.height = height;
+    }
+    public BlockPosWithHeight(BlockPos pos, int height) {
+        this.x = pos.getX();
+        this.y = pos.getY();
+        this.z = pos.getZ();
+        this.height = height;
+    }
+    public BlockPosWithHeight up(double n) {
+        return new BlockPosWithHeight(x, y + n, z, height);
+    }
+    public BlockPosWithHeight down(double n) {
+        return new BlockPosWithHeight(x, y - n, z, height);
+    }
+
+    public BlockPosWithHeight up() {
+        return up(1);
+    }
+    public BlockPosWithHeight down() {
+        return down(1);
+    }
+    public BlockPosWithHeight upHeight() {
+        return new BlockPosWithHeight(x, y + 1, z, height - 1);
+    }
+    public BlockPosWithHeight downHeight() {
+        return new BlockPosWithHeight(x, y - 1, z, height + 1);
+    }
 
     public BlockPosWithHeight addX(double n) {
         return new BlockPosWithHeight(x + n, y, z, height);
