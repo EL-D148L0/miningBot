@@ -34,9 +34,43 @@ public class Vein {
     }
     public boolean mine() throws InterruptedException, HowDidThisHappenException {
         // if this is at a different time than right after discovering ore in the tunnel weird things might happen.
+
         BlockPosWithHeight startPoint = getStartPoint();
         moveTo(startPoint);
+        int startDirection = getStartDirection(startPoint);
         return true;
+    }
+
+    private int getStartDirection(BlockPosWithHeight startPoint) throws HowDidThisHappenException {
+        BlockPos testPos = new BlockPos(startPoint);
+        testPos = testPos.up(2).addX(1);
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.POSITIVE_X;
+        testPos = testPos.addX(-2);
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.NEGATIVE_X;
+        testPos = testPos.addX(1).addZ(1);
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.POSITIVE_Z;
+        testPos = testPos.addZ(-2);
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.NEGATIVE_Z;
+        if (oreBlocks.get(0).getX() > startPoint.getX()) {
+            return Constants.POSITIVE_X;
+        } else if (oreBlocks.get(0).getX() < startPoint.getX()) {
+            return Constants.NEGATIVE_X;
+        } else if (oreBlocks.get(0).getZ() > startPoint.getZ()) {
+            return Constants.POSITIVE_Z;
+        } else if (oreBlocks.get(0).getZ() < startPoint.getZ()) {
+            return Constants.NEGATIVE_Z;
+        }//if no return at this point the ore should either be above or under the player. the direction that is following the tunnel will be returned by the following code
+        testPos = new BlockPos(startPoint);
+        testPos = testPos.up(2).addX(1);
+        if (minedBlocks.contains(testPos)) return Constants.NEGATIVE_X;
+        testPos = testPos.addX(-2);
+        if (minedBlocks.contains(testPos)) return Constants.POSITIVE_X;
+        testPos = testPos.addX(1).addZ(1);
+        if (minedBlocks.contains(testPos)) return Constants.NEGATIVE_Z;
+        testPos = testPos.addZ(-2);
+        if (minedBlocks.contains(testPos)) return Constants.POSITIVE_Z;
+
+        throw new HowDidThisHappenException("i really have no idea how we got here. something must be wrong with the values that were passed into Vein");
     }
 
     private boolean moveTo(BlockPosWithHeight target) throws InterruptedException, HowDidThisHappenException {
