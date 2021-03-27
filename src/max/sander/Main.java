@@ -129,7 +129,7 @@ public class Main {
 
 
             Vein vein = new Vein(seenBlocks, oreBlocks, minedBlocks, hazardBlockingBlocks);
-            vein.mine();
+//            vein.mine();
 
             
 

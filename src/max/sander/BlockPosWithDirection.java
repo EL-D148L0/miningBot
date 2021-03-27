@@ -13,13 +13,13 @@ public class BlockPosWithDirection {
         this.y = playerPos[1];
         this.z = playerPos[2];
         if (debug.contains("positive X")) {
-            direction = Constants.POSITIVE_X;
+            direction = Directions.POSITIVE_X;
         } else if (debug.contains("negative X")) {
-            direction = Constants.NEGATIVE_X;
+            direction = Directions.NEGATIVE_X;
         } else if (debug.contains("positive Z")) {
-            direction = Constants.POSITIVE_Z;
+            direction = Directions.POSITIVE_Z;
         } else if (debug.contains("negative Z")) {
-            direction = Constants.NEGATIVE_Z;
+            direction = Directions.NEGATIVE_Z;
         }
     }
     public BlockPosWithDirection(double x, double y, double z, int dir) {
@@ -47,6 +47,17 @@ public class BlockPosWithDirection {
         this.y = pos[1];
         this.z = pos[2];
         this.direction = dir;
+    }
+    public BlockPosWithDirection move(int direction) {
+        if (direction == Directions.POSITIVE_X) {
+            return addX(1);
+        } else if (direction == Directions.NEGATIVE_X) {
+            return addX(-1);
+        } else if (direction == Directions.POSITIVE_Z) {
+            return addZ(1);
+        } else if (direction == Directions.NEGATIVE_Z) {
+            return addZ(-1);
+        } else return this;
     }
     public BlockPosWithDirection up() {
         return up(1);

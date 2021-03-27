@@ -1,6 +1,6 @@
 package max.sander;
 
-public class Constants {
+public class Directions {
 
     public static final int POSITIVE_X = 0;
     public static final int NEGATIVE_X = 1;

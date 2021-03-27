@@ -38,6 +38,17 @@ public class BlockPosWithHeight {
     public BlockPosWithHeight down(double n) {
         return new BlockPosWithHeight(x, y - n, z, height);
     }
+    public BlockPosWithHeight move(int direction) {
+        if (direction == Directions.POSITIVE_X) {
+            return addX(1);
+        } else if (direction == Directions.NEGATIVE_X) {
+            return addX(-1);
+        } else if (direction == Directions.POSITIVE_Z) {
+            return addZ(1);
+        } else if (direction == Directions.NEGATIVE_Z) {
+            return addZ(-1);
+        } else return this;
+    }
 
     public BlockPosWithHeight up() {
         return up(1);

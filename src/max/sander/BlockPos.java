@@ -39,6 +39,17 @@ public class BlockPos {
     public BlockPos down() {
         return down(1);
     }
+    public BlockPos move(int direction) {
+        if (direction == Directions.POSITIVE_X) {
+            return addX(1);
+        } else if (direction == Directions.NEGATIVE_X) {
+            return addX(-1);
+        } else if (direction == Directions.POSITIVE_Z) {
+            return addZ(1);
+        } else if (direction == Directions.NEGATIVE_Z) {
+            return addZ(-1);
+        } else return this;
+    }
 
     public BlockPos addX(double n) {
         return new BlockPos(x + n, y, z);

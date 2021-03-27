@@ -15,6 +15,7 @@ public class Vein {
         this.minedBlocks = minedBlocks;
         this.hazardBlockingBlocks = hazardBlockingBlocks;
         this.floorPlan = getFloorPlan();
+        //System.out.println("aaaa" + getUnknownNeighbors(new BlockPos(45, 56, 86)));
     }
 
     public ArrayList<BlockPosWithHeight> getFloorPlan() {
@@ -38,37 +39,86 @@ public class Vein {
         BlockPosWithHeight startPoint = getStartPoint();
         moveTo(startPoint);
         int startDirection = getStartDirection(startPoint);
+        if (!minedBlocks.contains(new BlockPos(startPoint.up(2).move(startDirection)))) {
+
+        }
         return true;
+    }
+
+    private int scan(BlockPos minedBlock) {
+        ArrayList<BlockPos> unknownNeighbors = getUnknownNeighbors(minedBlock);
+
+        return ScanResults.OK;
+    }
+    private boolean pointAtBlock(BlockPos target) throws InterruptedException {
+        String debug = Main.getDebug(Main.getGameScreen());
+        //suchmuster: mitten -> mitten der kanten -> ecken -> raster
+        double targetYaw;
+        double targetPitch;
+        double eyeHeight = 1.62;
+        double[] eyePos = Main.getPlayerPos(debug);
+        eyePos[1] += eyeHeight;
+        ArrayList<BlockPos> possibleObstacles = getPossibleObstacles(target, eyePos);
+
+        return true;
+    }
+
+
+    private ArrayList<BlockPos> getPossibleObstacles(BlockPos target, double[] eyePos) {
+        ArrayList<BlockPos> possibleObstacles = new ArrayList<>();
+        SpaceLooper spaceLooper = new SpaceLooper(new BlockPos(eyePos), target);
+        for (int x = spaceLooper.smallX; x <= spaceLooper.bigX; x++) {
+            for (int y = spaceLooper.smallY; y <= spaceLooper.bigY; y++) {
+                for (int z = spaceLooper.smallZ; z <= spaceLooper.bigZ; z++) {
+                    if (seenBlocks.contains(new BlockPos(x, y, z))) {
+                        possibleObstacles.add(new BlockPos(x, y, z));
+                    }
+                }
+            }
+        }
+        return possibleObstacles;
+    }
+
+    private ArrayList<BlockPos> getUnknownNeighbors(BlockPos pos) {
+        ArrayList<BlockPos> out = new ArrayList<>();
+        out.add(pos.up());
+        out.add(pos.down());
+        out.add(pos.addX(1));
+        out.add(pos.addX(-1));
+        out.add(pos.addZ(1));
+        out.add(pos.addZ(-1));
+        out.removeIf(block -> minedBlocks.contains(block) || seenBlocks.contains(block));
+        return out;
     }
 
     private int getStartDirection(BlockPosWithHeight startPoint) throws HowDidThisHappenException {
         BlockPos testPos = new BlockPos(startPoint);
         testPos = testPos.up(2).addX(1);
-        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.POSITIVE_X;
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Directions.POSITIVE_X;
         testPos = testPos.addX(-2);
-        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.NEGATIVE_X;
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Directions.NEGATIVE_X;
         testPos = testPos.addX(1).addZ(1);
-        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.POSITIVE_Z;
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Directions.POSITIVE_Z;
         testPos = testPos.addZ(-2);
-        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Constants.NEGATIVE_Z;
+        if (minedBlocks.contains(testPos) && !minedBlocks.contains(testPos.down())) return Directions.NEGATIVE_Z;
         if (oreBlocks.get(0).getX() > startPoint.getX()) {
-            return Constants.POSITIVE_X;
+            return Directions.POSITIVE_X;
         } else if (oreBlocks.get(0).getX() < startPoint.getX()) {
-            return Constants.NEGATIVE_X;
+            return Directions.NEGATIVE_X;
         } else if (oreBlocks.get(0).getZ() > startPoint.getZ()) {
-            return Constants.POSITIVE_Z;
+            return Directions.POSITIVE_Z;
         } else if (oreBlocks.get(0).getZ() < startPoint.getZ()) {
-            return Constants.NEGATIVE_Z;
+            return Directions.NEGATIVE_Z;
         }//if no return at this point the ore should either be above or under the player. the direction that is following the tunnel will be returned by the following code
         testPos = new BlockPos(startPoint);
         testPos = testPos.up(2).addX(1);
-        if (minedBlocks.contains(testPos)) return Constants.NEGATIVE_X;
+        if (minedBlocks.contains(testPos)) return Directions.NEGATIVE_X;
         testPos = testPos.addX(-2);
-        if (minedBlocks.contains(testPos)) return Constants.POSITIVE_X;
+        if (minedBlocks.contains(testPos)) return Directions.POSITIVE_X;
         testPos = testPos.addX(1).addZ(1);
-        if (minedBlocks.contains(testPos)) return Constants.NEGATIVE_Z;
+        if (minedBlocks.contains(testPos)) return Directions.NEGATIVE_Z;
         testPos = testPos.addZ(-2);
-        if (minedBlocks.contains(testPos)) return Constants.POSITIVE_Z;
+        if (minedBlocks.contains(testPos)) return Directions.POSITIVE_Z;
 
         throw new HowDidThisHappenException("i really have no idea how we got here. something must be wrong with the values that were passed into Vein");
     }
