@@ -32,6 +32,15 @@ public class Vector3D {
     double dot(Vector3D v) {
         return x * v.x + y * v.y + z * v.z;
     }
+
+    double length() {
+        return Math.sqrt(x*x + y*y + z*z);
+    }
+
+    Vector3D unitVector() {
+        double length = this.length();
+        return new Vector3D(x/length, y/length, z/length);
+    }
     
     static Vector3D intersectPointRay(Vector3D rayVector, Vector3D rayPoint, Vector3D planeNormal, Vector3D planePoint) {
         Vector3D diff = rayPoint.minus(planePoint);
@@ -42,6 +51,9 @@ public class Vector3D {
         if (prod3 > 0) return null;
         if (!Double.isFinite(prod3)) return  null;
         return rayPoint.minus(rayVector.times(prod3));
+    }
+    static  Vector3D intersectPointRay(Ray3D ray, Plane3D plane) {
+        return intersectPointRay(ray.getDirectionVector(), ray.getStartPointVector(), plane.getNormalVector(), plane.getStartPointVector());
     }
 
     @Override
