@@ -109,6 +109,7 @@ public class Main {
 
 
             debug = getDebug(getGameScreen());
+            //System.out.println(debug);
 
 //            mineVeinTunnelLevel();
 //            BlockPosWithDirection testBPWD = new BlockPosWithDirection(35, 56, 31, 0);

@@ -39,16 +39,23 @@ public class BlockPos {
     public BlockPos down() {
         return down(1);
     }
-    public BlockPos move(int direction) {
+    public BlockPos move(int direction, double n) {
         if (direction == Directions.POSITIVE_X) {
-            return addX(1);
+            return addX(n);
         } else if (direction == Directions.NEGATIVE_X) {
-            return addX(-1);
+            return addX(-n);
         } else if (direction == Directions.POSITIVE_Z) {
-            return addZ(1);
+            return addZ(n);
         } else if (direction == Directions.NEGATIVE_Z) {
-            return addZ(-1);
+            return addZ(-n);
+        } else if (direction == Directions.POSITIVE_Y) {
+            return addY(n);
+        } else if (direction == Directions.NEGATIVE_Y) {
+            return addY(-n);
         } else return this;
+    }
+    public BlockPos move(int direction) {
+        return move(direction, 1);
     }
 
     public BlockPos addX(double n) {
