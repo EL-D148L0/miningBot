@@ -13,6 +13,19 @@ public class Vector3D {
         this.y = in[1];
         this.z = in[2];
     }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public double getZ() {
+        return z;
+    }
+
     double[] toDoubleArray() {
         return new double[] {this.x, this.y, this.z};
     }

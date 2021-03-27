@@ -13,7 +13,7 @@ public class Plane3D {
     }
 
     public Plane3D(Vector3D startPointVector, Vector3D normalVector) {
-        this.normalVector = normalVector;
+        this.normalVector = normalVector.unitVector();
         this.startPointVector = startPointVector;
     }
 }
