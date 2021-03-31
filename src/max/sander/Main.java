@@ -1645,6 +1645,9 @@ public class Main {
         pointAtPos(targetPos.up(0.35));
     }
     static void pointAtPos(BlockPosWithDirection targetPos) throws InterruptedException {
+        pointAtPos(new BlockPos(targetPos));
+    }
+    static void pointAtPos(BlockPos targetPos) throws InterruptedException {
         String debug = getDebug(getGameScreen());
         double eyeHeight = 1.62;
         double[] playerPos = getPlayerPos(debug);
