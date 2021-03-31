@@ -61,7 +61,7 @@ public class Vein {
         ArrayList<BlockPos> possibleObstacles = getPossibleObstacles(target, eyePos);
         BlockPos pointingTarget = ViewCalculations.obstructedTargetPoint(target, eyePos, possibleObstacles);
         if (pointingTarget == null) return false;
-        Main.pointAtPos(pointingTarget);
+        Direction dir = new Direction(eyePos, pointingTarget);
 
 
         return true;

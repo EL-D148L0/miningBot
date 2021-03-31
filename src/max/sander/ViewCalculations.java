@@ -54,6 +54,7 @@ public class ViewCalculations {
 
         return null;
     }
+
     static int[] getPerpendicularDirections(int in) {
         if (in == Directions.POSITIVE_X || in == Directions.NEGATIVE_X) {
             return new int[] {Directions.POSITIVE_Y, Directions.NEGATIVE_Y, Directions.POSITIVE_Z, Directions.NEGATIVE_Z};
