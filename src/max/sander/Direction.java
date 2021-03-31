@@ -1,14 +1,15 @@
 package max.sander;
 
 import static max.sander.Main.distance3D;
+import static max.sander.Util.round;
 
 public class Direction {
-    private double yaw;
-    private double pitch;
+    private final double yaw;
+    private final double pitch;
 
-    public Direction(double yaw, double pitch) {
-        this.yaw = yaw;
-        this.pitch = pitch;
+    public Direction(double targetYaw, double targetPitch) {
+        this.yaw = round(targetYaw, 1);
+        this.pitch = round(targetPitch, 1);
     }
     public Direction(double[] eyePos, BlockPos target) {
         double xDiff = (eyePos[0] - (target.getX()+ 0.5));
@@ -30,6 +31,8 @@ public class Direction {
 
         double distance = distance3D(eyePos, target.toDoubleArray());
         if (distance != 0) targetPitch = Math.toDegrees(Math.asin(yDiff/distance));
+        targetYaw = round(targetYaw, 1);
+        targetPitch = round(targetPitch, 1);
         this.yaw = targetYaw;
         this.pitch = targetPitch;
     }

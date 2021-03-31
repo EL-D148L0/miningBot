@@ -52,7 +52,7 @@ public class Vein {
     }
     private boolean pointAtBlock(BlockPos target) throws InterruptedException {
         String debug = Main.getDebug(Main.getGameScreen());
-        //suchmuster: mitten -> mitten der kanten -> ecken -> raster
+
         double targetYaw;
         double targetPitch;
         double eyeHeight = 1.62;

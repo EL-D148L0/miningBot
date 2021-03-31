@@ -735,8 +735,8 @@ public class Main {
         double targetPitch = getPointAtPitch(targetBPWD, debug);
 
 
-        targetYaw = round(targetYaw, 1);
-        targetPitch = round(targetPitch, 1);
+        targetYaw = Util.round(targetYaw, 1);
+        targetPitch = Util.round(targetPitch, 1);
         robot.keyPress(KeyEvent.VK_W);
 
         double x = Math.floor(targetBPWD.getX()) + 0.5;
@@ -1747,8 +1747,8 @@ public class Main {
 //        double[] facing;
         double yawDiff;
         double pitchDiff;
-        targetYaw = round(targetYaw, 1);
-        targetPitch = round(targetPitch, 1);
+        targetYaw = Util.round(targetYaw, 1);
+        targetPitch = Util.round(targetPitch, 1);
 
 
         //setup for break logic
@@ -2391,8 +2391,8 @@ public class Main {
         double[] facing;
         double yawDiff;
         double pitchDiff;
-        targetYaw = round(targetYaw, 1);
-        targetPitch = round(targetPitch, 1);
+        targetYaw = Util.round(targetYaw, 1);
+        targetPitch = Util.round(targetPitch, 1);
         while (true) {
             facing = getFacingFromRobot();
             yawDiff = targetYaw - facing[0];
@@ -2413,10 +2413,7 @@ public class Main {
             }
         }
     }
-    public static double round(double value, int places) {
-        double scale = Math.pow(10, places);
-        return Math.round(value * scale) / scale;
-    }
+
     static void rightClick() throws InterruptedException {
         if (holdingRMB) {
             robot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
