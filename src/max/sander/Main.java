@@ -61,12 +61,6 @@ public class Main {
     static char slotWater = '7';
     static char slotSlabs = '8';
 
-    //block collections
-    static String[] ores =  new String[]{"minecraft:emerald_ore", "minecraft:gold_ore", "minecraft:iron_ore",
-            "minecraft:coal_ore", "minecraft:diamond_ore", "minecraft:redstone_ore", "minecraft:lapis_ore"};
-    static String[] stones =  new String[]{"minecraft:cobblestone", "minecraft:stone", "minecraft:diorite",
-            "minecraft:granite", "minecraft:andesite", "minecraft:dirt", "minecraft:sand", "minecraft:gravel"};
-
     /*
 
 
@@ -1241,10 +1235,10 @@ public class Main {
         if (block.equals("minecraft:infested_stone")) {
             if (fallingsand) return "infested sand";
             return "infested";
-        } else if (arrayContainsString(ores, block)) {
+        } else if (Util.arrayContainsString(BlockTypes.ORES, block)) {
             if (fallingsand) return "ore sand";
             return "ore";
-        } else if (arrayContainsString(stones, block)) {
+        } else if (Util.arrayContainsString(BlockTypes.STONES, block)) {
             if (fallingsand) return "stone sand";
             return "stone";
         } else {
@@ -1291,16 +1285,7 @@ public class Main {
         }
 
     }
-    static boolean arrayContainsString(String[] arrayIn, String in) {
-        boolean answer = false;
-        for (String i : arrayIn) {
-            if (in.equals(i)) {
-                answer = true;
-                break;
-            }
-        }
-        return answer;
-    }
+
     static void writeChatDebug(String in) throws InterruptedException {
         if (debuggingMode) {
             System.out.println(in);

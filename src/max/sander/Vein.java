@@ -4,6 +4,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import static max.sander.Main.getLookingAtBlock;
 import static max.sander.Main.robot;
 
 public class Vein {
@@ -49,10 +50,15 @@ public class Vein {
         return true;
     }
 
-    private int scan(BlockPos minedBlock) {
+    private int scan(BlockPos minedBlock) throws InterruptedException {
         ArrayList<BlockPos> unknownNeighbors = getUnknownNeighbors(minedBlock);
+        for (BlockPos unknownBlock : unknownNeighbors) {
+            int response = pointAtBlockResponseCodes(unknownBlock);
+            if (response == ResponseCodes.NO_ROUTE) {
 
-        return ScanResults.OK;
+            }
+        }
+        return ResponseCodes.OK;
     }
     private boolean pointAtBlock(BlockPos target) throws InterruptedException {
         //todo so far not tested
@@ -99,13 +105,125 @@ public class Vein {
         }
         return true;
     }
+    private int pointAtBlockResponseCodesAddIfOk(BlockPos target) throws InterruptedException {
+        int response = pointAtBlockResponseCodes(target);
+        if (response == ResponseCodes.OK) {
+            seenBlocks.add(target);
+        }
+        return response;
+    }
+    private int pointAtBlockResponseCodesSand(BlockPos target) throws InterruptedException, UnexpectedGameBehaviourException {
+        //todo so far not tested
+
+        String debug = Main.getDebug(Main.getGameScreen());
+
+        double targetYaw;
+        double targetPitch;
+        double eyeHeight = 1.62;
+        double[] eyePos = Main.getPlayerPos(debug);
+        eyePos[1] += eyeHeight;
+        ArrayList<BlockPos> possibleObstacles = getPossibleObstacles(target, eyePos);
+        BlockPos pointingTarget = ViewCalculations.obstructedTargetPoint(target, eyePos, possibleObstacles);
+        if (pointingTarget == null) return ResponseCodes.NO_ROUTE;
+        Direction dir = new Direction(eyePos, pointingTarget);
+        targetYaw = dir.getYaw();
+        targetPitch = dir.getPitch();
+
+
+        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        int mouseX = mouseLocation.x;
+        int mouseY = mouseLocation.y;
+        double[] facing;
+        double yawDiff;
+        double pitchDiff;
+        while (true) {
+            debug = Main.getDebug(Main.getGameScreen());
+            facing = Main.getFacing(debug);
+            yawDiff = targetYaw - facing[0];
+            pitchDiff = targetPitch - facing[1];
+            if (yawDiff < -180) {
+                yawDiff +=360;
+            }
+            if (yawDiff > 180) {
+                yawDiff -=360;
+            }
+            if (!Main.getLookingAtFluid(debug).equals("minecraft:empty")) return ResponseCodes.FLUID;
+            if (target == Main.getLookingAtBlockPos(debug)) return ResponseCodes.OK;
+
+            if (yawDiff == 0 && pitchDiff == 0) {
+                SpaceLooper spaceLooper = new SpaceLooper(new BlockPos(eyePos), target);
+                BlockPos blockPos = Main.getLookingAtBlockPos(debug);
+                if (blockPos == null) {
+                    return ResponseCodes.AIR;
+                }
+                if (spaceLooper.contains(blockPos)) {
+                    if (!Util.arrayContainsString(BlockTypes.FALLING_BLOCKS, Main.getLookingAtBlock(debug))) throw new UnexpectedGameBehaviourException("well something unexpected happened");
+                    //todo add sand handling function here
+                }
+                return ResponseCodes.AIR;
+            }
+            if (debug.contains("Targeted Entity")) return ResponseCodes.MONSTER;
+            robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
+            try {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    private int pointAtBlockResponseCodes(BlockPos target) throws InterruptedException {
+        //todo so far not tested
+
+        String debug = Main.getDebug(Main.getGameScreen());
+
+        double targetYaw;
+        double targetPitch;
+        double eyeHeight = 1.62;
+        double[] eyePos = Main.getPlayerPos(debug);
+        eyePos[1] += eyeHeight;
+        ArrayList<BlockPos> possibleObstacles = getPossibleObstacles(target, eyePos);
+        BlockPos pointingTarget = ViewCalculations.obstructedTargetPoint(target, eyePos, possibleObstacles);
+        if (pointingTarget == null) return ResponseCodes.NO_ROUTE;
+        Direction dir = new Direction(eyePos, pointingTarget);
+        targetYaw = dir.getYaw();
+        targetPitch = dir.getPitch();
+
+
+        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        int mouseX = mouseLocation.x;
+        int mouseY = mouseLocation.y;
+        double[] facing;
+        double yawDiff;
+        double pitchDiff;
+        while (true) {
+            debug = Main.getDebug(Main.getGameScreen());
+            facing = Main.getFacing(debug);
+            yawDiff = targetYaw - facing[0];
+            pitchDiff = targetPitch - facing[1];
+            if (yawDiff < -180) {
+                yawDiff +=360;
+            }
+            if (yawDiff > 180) {
+                yawDiff -=360;
+            }
+            if (!Main.getLookingAtFluid(debug).equals("minecraft:empty")) return ResponseCodes.FLUID;
+            if (target == Main.getLookingAtBlockPos(debug)) return ResponseCodes.OK;
+            if (yawDiff == 0 && pitchDiff == 0) return ResponseCodes.AIR;
+            if (debug.contains("Targeted Entity")) return ResponseCodes.MONSTER;
+            robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
+            try {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
     private ArrayList<BlockPos> getPossibleObstacles(BlockPos target, double[] eyePos) {
         ArrayList<BlockPos> possibleObstacles = new ArrayList<>();
         SpaceLooper spaceLooper = new SpaceLooper(new BlockPos(eyePos), target);
-        for (BlockPos block :
-                seenBlocks) {
+        for (BlockPos block : seenBlocks) {
             if (spaceLooper.contains(block)) {
                 possibleObstacles.add(block);
             }

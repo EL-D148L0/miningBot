@@ -13,7 +13,7 @@ public class ViewCalculations {
         //search pattern: centers -> middles of edges -> corners -> grid
         BlockPos eyePosBP = new BlockPos(eyePos);
         BlockPos out = null;
-        ArrayList<Integer> sides = getVisibleSides(eyePos,target);
+        ArrayList<Integer> sides = getVisibleSides(eyePos,target, possibleObstructions);
         Queue<BlockPos> queue = new LinkedList<>();// queue of points on the surface of the target that will be checked for visibility
         BlockPos targetCenter = target.addX(0.5).addY(0.5).addZ(0.5);
         queue.add(targetCenter);// adding blocks center
@@ -96,25 +96,30 @@ public class ViewCalculations {
         }
         return true;
     }
-    static ArrayList<Integer> getVisibleSides(double[] eyePos, BlockPos block) {
-        //returns list of directions in which you have to move block by 0.5 to get to a visible side
+    static ArrayList<Integer> getVisibleSides(double[] eyePos, BlockPos target, ArrayList<BlockPos> possibleObstructions) {
+        ArrayList<Integer> out = getVisibleSidesNoObstructions(eyePos, target);
+        out.removeIf(dir -> possibleObstructions.contains(target.move(dir)));
+        return out;
+    }
+    static ArrayList<Integer> getVisibleSidesNoObstructions(double[] eyePos, BlockPos target) {
+        //returns list of directions in which you have to move target by 0.5 to get to a visible side
         ArrayList<Integer> out = new ArrayList<>();
-        if (eyePos[0] < block.getX()) {
+        if (eyePos[0] < target.getX()) {
             out.add(Directions.NEGATIVE_X);
         }
-        if (eyePos[0] > block.getX() + 1) {
+        if (eyePos[0] > target.getX() + 1) {
             out.add(Directions.POSITIVE_X);
         }
-        if (eyePos[1] < block.getY()) {
+        if (eyePos[1] < target.getY()) {
             out.add(Directions.NEGATIVE_Y);
         }
-        if (eyePos[1] > block.getY() + 1) {
+        if (eyePos[1] > target.getY() + 1) {
             out.add(Directions.POSITIVE_Y);
         }
-        if (eyePos[2] < block.getZ()) {
+        if (eyePos[2] < target.getZ()) {
             out.add(Directions.NEGATIVE_Z);
         }
-        if (eyePos[2] > block.getZ() + 1) {
+        if (eyePos[2] > target.getZ() + 1) {
             out.add(Directions.POSITIVE_Z);
         }
         if (out.size() == 0) {
@@ -128,7 +133,7 @@ public class ViewCalculations {
         return out;
     }
     static boolean cutsBlock(Ray3D ray, BlockPos block) {
-        ArrayList<Integer> sides = getVisibleSides(ray.getStartPointVector().toDoubleArray(), block);
+        ArrayList<Integer> sides = getVisibleSidesNoObstructions(ray.getStartPointVector().toDoubleArray(), block);
         for (int i : sides) {
             Plane3D plane3D;
             BlockPos blockCenter = block.addX(0.5).addY(0.5).addZ(0.5);
