@@ -2327,6 +2327,15 @@ public class Main {
             return new double[]{x, y ,z};
         } else return null;
     }
+    static BlockPos getLookingAtBlockPos(String in) {
+        String coords = returnRegExMatch(in, "(?<=Targeted Block: ).+(?=\\n)");
+        if (coords != null){
+            double x = Integer.parseInt(coords.substring(0, coords.indexOf(",")));
+            double y = Integer.parseInt(coords.substring(coords.indexOf(",") + 2, coords.lastIndexOf(",")));
+            double z = Integer.parseInt(coords.substring(coords.lastIndexOf(",") + 2));
+            return new BlockPos(x, y, z);
+        } else return null;
+    }
     static double[] getLookingAtBlockCoordsNotNull(String in) throws DebugTextIncompleteException {
         double[] out = getLookingAtBlockCoords(in);
         if (out == null) {

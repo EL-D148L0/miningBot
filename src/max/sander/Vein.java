@@ -1,6 +1,10 @@
 package max.sander;
 
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
+import static max.sander.Main.robot;
 
 public class Vein {
     ArrayList<BlockPos> seenBlocks;// blocks that are mined get removed from this list
@@ -51,6 +55,7 @@ public class Vein {
         return ScanResults.OK;
     }
     private boolean pointAtBlock(BlockPos target) throws InterruptedException {
+        //todo so far not tested
         String debug = Main.getDebug(Main.getGameScreen());
 
         double targetYaw;
@@ -62,13 +67,42 @@ public class Vein {
         BlockPos pointingTarget = ViewCalculations.obstructedTargetPoint(target, eyePos, possibleObstacles);
         if (pointingTarget == null) return false;
         Direction dir = new Direction(eyePos, pointingTarget);
+        targetYaw = dir.getYaw();
+        targetPitch = dir.getPitch();
 
 
+        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        int mouseX = mouseLocation.x;
+        int mouseY = mouseLocation.y;
+        double[] facing;
+        double yawDiff;
+        double pitchDiff;
+        while (true) {
+            debug = Main.getDebug(Main.getGameScreen());
+            facing = Main.getFacing(debug);
+            yawDiff = targetYaw - facing[0];
+            pitchDiff = targetPitch - facing[1];
+            if (yawDiff < -180) {
+                yawDiff +=360;
+            }
+            if (yawDiff > 180) {
+                yawDiff -=360;
+            }
+            if (target == Main.getLookingAtBlockPos(debug)) break;
+            if (yawDiff == 0 && pitchDiff == 0) break;
+            robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
+            try {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         return true;
     }
 
 
     private ArrayList<BlockPos> getPossibleObstacles(BlockPos target, double[] eyePos) {
+        // todo switch this around so it loops through seenblocks and compares the coordinates
         ArrayList<BlockPos> possibleObstacles = new ArrayList<>();
         SpaceLooper spaceLooper = new SpaceLooper(new BlockPos(eyePos), target);
         for (int x = spaceLooper.smallX; x <= spaceLooper.bigX; x++) {
