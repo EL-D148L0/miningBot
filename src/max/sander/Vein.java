@@ -102,16 +102,12 @@ public class Vein {
 
 
     private ArrayList<BlockPos> getPossibleObstacles(BlockPos target, double[] eyePos) {
-        // todo switch this around so it loops through seenblocks and compares the coordinates
         ArrayList<BlockPos> possibleObstacles = new ArrayList<>();
         SpaceLooper spaceLooper = new SpaceLooper(new BlockPos(eyePos), target);
-        for (int x = spaceLooper.smallX; x <= spaceLooper.bigX; x++) {
-            for (int y = spaceLooper.smallY; y <= spaceLooper.bigY; y++) {
-                for (int z = spaceLooper.smallZ; z <= spaceLooper.bigZ; z++) {
-                    if (seenBlocks.contains(new BlockPos(x, y, z))) {
-                        possibleObstacles.add(new BlockPos(x, y, z));
-                    }
-                }
+        for (BlockPos block :
+                seenBlocks) {
+            if (spaceLooper.contains(block)) {
+                possibleObstacles.add(block);
             }
         }
         return possibleObstacles;

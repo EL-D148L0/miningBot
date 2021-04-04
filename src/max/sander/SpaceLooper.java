@@ -31,4 +31,7 @@ public class SpaceLooper {
         }
         
     }
+    public Boolean contains(BlockPos block) {
+        return (block.getX() >= this.smallX && block.getX() <= this.bigX && block.getY() >= this.smallY && block.getY() <= this.bigY && block.getZ() >= this.smallZ && block.getZ() <= this.bigZ);
+    }
 }
