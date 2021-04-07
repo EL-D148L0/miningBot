@@ -4,8 +4,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static max.sander.Main.getLookingAtBlock;
-import static max.sander.Main.robot;
+import static max.sander.Main.*;
 
 public class Vein {
     ArrayList<BlockPos> seenBlocks;// blocks that are mined get removed from this list
@@ -13,6 +12,8 @@ public class Vein {
     ArrayList<BlockPos> minedBlocks;
     ArrayList<BlockPos> hazardBlockingBlocks;
     ArrayList<BlockPosWithHeight> floorPlan;// does not include spaces with height 1
+    ArrayList<BlockPos> futureScanBlocks;
+    ArrayList<BlockPos> ScanIgnoreBlocks;//blocks that shall be not scanned
 
     public Vein(ArrayList<BlockPos> seenBlocks, ArrayList<BlockPos> oreBlocks, ArrayList<BlockPos> minedBlocks, ArrayList<BlockPos> hazardBlockingBlocks) {
         this.seenBlocks = seenBlocks;
@@ -50,10 +51,10 @@ public class Vein {
         return true;
     }
 
-    private int scan(BlockPos minedBlock) throws InterruptedException {
+    private int scan(BlockPos minedBlock) throws InterruptedException, HowDidThisHappenException, UnexpectedGameBehaviourException {
         ArrayList<BlockPos> unknownNeighbors = getUnknownNeighbors(minedBlock);
         for (BlockPos unknownBlock : unknownNeighbors) {
-            int response = pointAtBlockResponseCodes(unknownBlock);
+            int response = pointAtBlockResponseCodesSand(unknownBlock);
             if (response == ResponseCodes.NO_ROUTE) {
 
             }
@@ -112,7 +113,7 @@ public class Vein {
         }
         return response;
     }
-    private int pointAtBlockResponseCodesSand(BlockPos target) throws InterruptedException, UnexpectedGameBehaviourException {
+    private int pointAtBlockResponseCodesSand(BlockPos target) throws InterruptedException, UnexpectedGameBehaviourException, HowDidThisHappenException {
         //todo so far not tested
 
         String debug = Main.getDebug(Main.getGameScreen());
@@ -158,7 +159,10 @@ public class Vein {
                 }
                 if (spaceLooper.contains(blockPos)) {
                     if (!Util.arrayContainsString(BlockTypes.FALLING_BLOCKS, Main.getLookingAtBlock(debug))) throw new UnexpectedGameBehaviourException("well something unexpected happened");
-                    //todo add sand handling function here
+                    int response = handleSand(blockPos);
+                    if (response != ResponseCodes.AIR) return response;
+                    // no fancy stonecutter tricks required. dig sand with shovel and count sands
+                    //todo continue here
                 }
                 return ResponseCodes.AIR;
             }
@@ -170,6 +174,52 @@ public class Vein {
                 e.printStackTrace();
             }
         }
+    }
+    private int handleSand(BlockPos sandPos) throws InterruptedException, HowDidThisHappenException {
+        // is called when pointing in the right direction
+        String debug;
+        int amount = 0;
+        BlockPos bottomSand = sandPos;
+        BlockPos topMinedBlock = sandPos;
+        if (minedBlocks.contains(bottomSand.down())) {
+            bottomSand = bottomSand.down();
+            if (minedBlocks.contains(bottomSand.down())) {
+                throw new HowDidThisHappenException("this function is not made to dig sand out of holes");
+            }
+        }
+
+        while (true) {
+            if (minedBlocks.contains(topMinedBlock.up())) {
+                topMinedBlock = topMinedBlock.up();
+            } else break;
+        }
+        while (true) {
+            int response = pointAtBlockResponseCodes(sandPos);
+            if (response == ResponseCodes.OBSTACLE || response == ResponseCodes.NO_ROUTE) {
+                throw new HowDidThisHappenException("this should be impossible");
+            } else if (response == ResponseCodes.OK) {
+                mineBlockWithTool();
+                TimeUnit.MILLISECONDS.sleep(300);
+                amount += 1;
+                topMinedBlock = topMinedBlock.up();
+                minedBlocks.add(topMinedBlock);
+            } else if (response == ResponseCodes.AIR) {
+                break;
+            } else return response;
+        }
+        if (bottomSand != sandPos) {
+            int response = pointAtBlockResponseCodes(sandPos);
+            if (response == ResponseCodes.OBSTACLE || response == ResponseCodes.NO_ROUTE || response == ResponseCodes.AIR) {
+                throw new HowDidThisHappenException("this should be impossible");
+            } else if (response == ResponseCodes.OK) {
+                mineBlockWithTool();
+                TimeUnit.MILLISECONDS.sleep(300);
+                amount += 1;
+                topMinedBlock = topMinedBlock.up();
+                minedBlocks.add(topMinedBlock);
+            } else return response;
+        }
+        return ResponseCodes.OK;
     }
     private int pointAtBlockResponseCodes(BlockPos target) throws InterruptedException {
         //todo so far not tested
@@ -208,7 +258,17 @@ public class Vein {
             }
             if (!Main.getLookingAtFluid(debug).equals("minecraft:empty")) return ResponseCodes.FLUID;
             if (target == Main.getLookingAtBlockPos(debug)) return ResponseCodes.OK;
-            if (yawDiff == 0 && pitchDiff == 0) return ResponseCodes.AIR;
+            if (yawDiff == 0 && pitchDiff == 0) {
+                BlockPos blockPos = Main.getLookingAtBlockPos(debug);
+                if (blockPos == null) {
+                    return ResponseCodes.AIR;
+                }
+                SpaceLooper spaceLooper = new SpaceLooper(new BlockPos(eyePos), target);
+                if (spaceLooper.contains(blockPos)) {
+                    return ResponseCodes.OBSTACLE;
+                }
+                return ResponseCodes.AIR;
+            }
             if (debug.contains("Targeted Entity")) return ResponseCodes.MONSTER;
             robot.mouseMove((int) (mouseX + Math.round(yawDiff*10)), (int) (mouseY + Math.round(pitchDiff*10)));
             try {
