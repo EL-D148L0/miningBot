@@ -40,7 +40,7 @@ public class Vein {
         }
         return floorPlan;
     }
-    public boolean mine() throws InterruptedException, HowDidThisHappenException {
+    public boolean mine() throws InterruptedException, HowDidThisHappenException, UnexpectedGameBehaviourException {
         // if this is at a different time than right after discovering ore in the tunnel weird things might happen.
 
         BlockPosWithHeight startPoint = getStartPoint();
@@ -48,12 +48,11 @@ public class Vein {
         int startDirection = getStartDirection(startPoint);
         BlockPos toBeMined = new BlockPos(startPoint.up(2).move(startDirection));
         if (!minedBlocks.contains(toBeMined)) {
-            pointAtBlock(toBeMined);
-            mineBlockWithTool();
+            int temp = pointMineScanReact(toBeMined);
         }
         return true;
     }
-    private int pointMineScanReact(BlockPos target) throws InterruptedException, HowDidThisHappenException {
+    private int pointMineScanReact(BlockPos target) throws InterruptedException, HowDidThisHappenException, UnexpectedGameBehaviourException {
         int response = pointAtBlockResponseCodes(target);
         if (response != ResponseCodes.OK) {
             if (response == ResponseCodes.NO_ROUTE) {
@@ -63,20 +62,45 @@ public class Vein {
             }
         }
         if (!mineBlockWithTool()) throw new HowDidThisHappenException("needs investigation");
+        registerAsMined(target);
+        response = scan(target);
+        if (response == ResponseCodes.OK) {
+            return ResponseCodes.OK;
+        }
+        //todo continue here. making placeBlock function now
+
 
 
 
 
         return ResponseCodes.OK;
     }
+    private boolean placeBlock(BlockPos target) {
+        ArrayList<BlockPos> solidNeighbors = getSolidNeighbors(target);//todo make function that checks stuff
+        return true;
+    }
+    private void registerAsMined(BlockPos target) {
+        seenBlocks.remove(target);
+        oreBlocks.remove(target);
+        futureScanBlocks.remove(target);
+        minedBlocks.add(target);
+    }
     private int scan(BlockPos minedBlock) throws InterruptedException, HowDidThisHappenException, UnexpectedGameBehaviourException {
+        //possible returns: OK, FLUID, AIR, MONSTER
         ArrayList<BlockPos> unknownNeighbors = getUnknownNeighbors(minedBlock);
         for (BlockPos unknownBlock : unknownNeighbors) {
             int response = pointAtBlockResponseCodesSand(unknownBlock);
             if (response == ResponseCodes.NO_ROUTE) {
                 futureScanBlocks.add(unknownBlock);
+                continue;
             }
             if (response == ResponseCodes.OK) {
+                //add to lists
+                seenBlocks.add(unknownBlock);
+                String debug = Main.getDebug(Main.getGameScreen());
+                if (Util.arrayContainsString(BlockTypes.ORES, Main.getLookingAtBlock(debug))) {
+                    oreBlocks.add(unknownBlock);
+                }
                 continue;
             }
             return response;
@@ -129,13 +153,7 @@ public class Vein {
         }
         return true;
     }
-    private int pointAtBlockResponseCodesAddIfOk(BlockPos target) throws InterruptedException {
-        int response = pointAtBlockResponseCodes(target);
-        if (response == ResponseCodes.OK) {
-            seenBlocks.add(target);
-        }
-        return response;
-    }
+
     private int pointAtBlockResponseCodesSand(BlockPos target) throws InterruptedException, UnexpectedGameBehaviourException, HowDidThisHappenException {
         //todo so far not tested
 
@@ -323,6 +341,17 @@ public class Vein {
         out.add(pos.addZ(1));
         out.add(pos.addZ(-1));
         out.removeIf(block -> minedBlocks.contains(block) || seenBlocks.contains(block));
+        return out;
+    }
+    private ArrayList<BlockPos> getSolidNeighbors(BlockPos pos) {
+        ArrayList<BlockPos> out = new ArrayList<>();
+        out.add(pos.up());
+        out.add(pos.down());
+        out.add(pos.addX(1));
+        out.add(pos.addX(-1));
+        out.add(pos.addZ(1));
+        out.add(pos.addZ(-1));
+        out.removeIf(block -> minedBlocks.contains(block) || !seenBlocks.contains(block));
         return out;
     }
 
