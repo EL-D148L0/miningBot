@@ -21,6 +21,7 @@ public class Vein {
         this.minedBlocks = minedBlocks;
         this.hazardBlockingBlocks = hazardBlockingBlocks;
         this.floorPlan = getFloorPlan();
+        this.futureScanBlocks = new ArrayList<BlockPos>();
         //System.out.println("aaaa" + getUnknownNeighbors(new BlockPos(45, 56, 86)));
     }
 
@@ -45,19 +46,41 @@ public class Vein {
         BlockPosWithHeight startPoint = getStartPoint();
         moveTo(startPoint);
         int startDirection = getStartDirection(startPoint);
-        if (!minedBlocks.contains(new BlockPos(startPoint.up(2).move(startDirection)))) {
-
+        BlockPos toBeMined = new BlockPos(startPoint.up(2).move(startDirection));
+        if (!minedBlocks.contains(toBeMined)) {
+            pointAtBlock(toBeMined);
+            mineBlockWithTool();
         }
         return true;
     }
+    private int pointMineScanReact(BlockPos target) throws InterruptedException, HowDidThisHappenException {
+        int response = pointAtBlockResponseCodes(target);
+        if (response != ResponseCodes.OK) {
+            if (response == ResponseCodes.NO_ROUTE) {
+                return ResponseCodes.NO_ROUTE;
+            } else {
+                throw new HowDidThisHappenException("needs investigation");
+            }
+        }
+        if (!mineBlockWithTool()) throw new HowDidThisHappenException("needs investigation");
 
+
+
+
+        return ResponseCodes.OK;
+    }
     private int scan(BlockPos minedBlock) throws InterruptedException, HowDidThisHappenException, UnexpectedGameBehaviourException {
         ArrayList<BlockPos> unknownNeighbors = getUnknownNeighbors(minedBlock);
         for (BlockPos unknownBlock : unknownNeighbors) {
             int response = pointAtBlockResponseCodesSand(unknownBlock);
             if (response == ResponseCodes.NO_ROUTE) {
-
+                futureScanBlocks.add(unknownBlock);
             }
+            if (response == ResponseCodes.OK) {
+                continue;
+            }
+            return response;
+
         }
         return ResponseCodes.OK;
     }
@@ -162,7 +185,7 @@ public class Vein {
                     int response = handleSand(blockPos);
                     if (response != ResponseCodes.AIR) return response;
                     // no fancy stonecutter tricks required. dig sand with shovel and count sands
-                    //todo continue here
+                    //todo continue here idk what to put here. probably block it. or just nothing.
                 }
                 return ResponseCodes.AIR;
             }
